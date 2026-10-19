@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>平均 学習アプリ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:20px;background:#fff;color:#222;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+#app{display:flex;flex-direction:column;height:100%}
+header{flex:none;padding:6px 12px;border-bottom:2px solid #ddd;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:52px}
+header .t{font-weight:bold;font-size:22px}
+#dots{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:120px}
+.dot{width:16px;height:16px;border:2px solid #2e9e5b;border-radius:50%;background:#fff}
+.dot.full{background:#2e9e5b}.dot.half{background:linear-gradient(90deg,#2e9e5b 50%,#fff 50%)}.dot.cur{box-shadow:0 0 0 3px #e8891d}
+main{flex:1;overflow:auto;padding:12px 16px;-webkit-overflow-scrolling:touch}
+footer{flex:none;display:flex;gap:8px;padding:8px 12px;border-top:2px solid #ddd;background:#fff}
+footer button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;line-height:1.2}
+footer button small{display:block;font-size:16px;font-weight:normal}
+footer button .ic{font-size:26px;display:inline-flex}
+footer button.fig{border-color:#3a6fd8;color:#3a6fd8;background:#eef3fc;border-radius:12px}
+footer button.hint{border-color:#e8891d;background:#e8891d;color:#fff;flex-direction:row}
+footer button.hint:disabled{background:#fff;color:#e8891d}
+.ovl.fig .ohead{background:#3a6fd8;color:#fff;display:flex;align-items:center;gap:8px}
+.hcard{border:3px solid #e8891d;border-radius:12px;padding:10px 14px;margin:10px 0;background:#fffaf2}
+.hcard .hh{font-weight:bold;color:#e8891d;font-size:20px;margin-bottom:4px}
+.hcard .hl{font-size:26px;line-height:1.6;margin:4px 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.hcard .ht{font-size:18px;color:#8a5a12;background:#fde9cc;border-radius:6px;padding:0 8px}
+.hcard .hf{font-weight:bold}.hcard .hr{color:#2e9e5b;font-weight:bold}.hcard .hq{color:#bbb}
+.hcard .hn{font-size:18px;color:#555;margin-top:4px}
+.opts button.mark{border-width:4px;border-color:#2e9e5b;background:#e8f7ee}
+button.pre{margin-top:8px;border-color:#e8891d;color:#e8891d}
+.lvbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0;font-size:20px}
+.lvbar button{min-height:52px;font-size:20px}.lvbar button.on{background:#3a6fd8;color:#fff}
+.lvtot{font-size:22px;font-weight:bold;margin:6px 0}
+.pic{margin:8px 0}
+.modesw{display:flex;gap:0;margin:8px 0}.modesw button{border-radius:0;min-width:160px}.modesw button:first-child{border-radius:10px 0 0 10px}.modesw button:last-child{border-radius:0 10px 10px 0}.modesw button.on{background:#3a6fd8;color:#fff}
+.bprog{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0;font-size:20px}
+.bprog span{border:2px solid #ccc;border-radius:20px;padding:4px 12px;color:#999}.bprog span.now{border-color:#3a6fd8;color:#3a6fd8;font-weight:bold}.bprog span.done{border-color:#2e9e5b;background:#e8f7ee;color:#2e9e5b}.bprog span.arr{border:none;padding:0;color:#bbb}
+.figopts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:10px 0}
+.figopts button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:18px;line-height:1.4;padding:8px}
+.figopts button.mark,.opts button.mark{border-width:4px;border-color:#2e9e5b;background:#e8f7ee}
+.opts.row4{flex-direction:row;flex-wrap:wrap}.opts.row4 button{min-width:150px;text-align:center;font-size:28px}
+.dot.done{background:#999;border-color:#999}
+.map .ng{border-color:#e8891d;color:#b06a00;background:#fff4e6}
+button.figrec{margin-top:8px;border-color:#3a6fd8;background:#eef3fc;display:inline-flex;align-items:center;gap:6px}
+button{font:inherit;font-size:22px;min-height:64px;border-radius:12px;border:2px solid #3a6fd8;background:#fff;color:#3a6fd8;padding:8px 16px;cursor:pointer}
+button.pri{background:#3a6fd8;color:#fff}button.ok{background:#2e9e5b;border-color:#2e9e5b;color:#fff}button.warn{border-color:#e8891d;color:#e8891d}button.sm{min-height:48px;font-size:18px;padding:4px 12px}
+button:disabled{opacity:.35}
+h1{font-size:30px;margin:10px 0}h2{font-size:24px;margin:14px 0 6px}
+.q{font-size:28px;line-height:1.5;margin:8px 0}.qs{font-size:24px;margin:6px 0;color:#444}
+.pn{display:inline-block;background:#3a6fd8;color:#fff;border-radius:8px;padding:2px 10px;font-size:22px;margin-right:8px}
+table.tb{border-collapse:collapse;margin:8px 0;font-size:22px}.tb th,.tb td{border:2px solid #888;padding:6px 12px;text-align:center}.tb th{background:#e3ecfa}
+.ans{display:flex;align-items:center;gap:10px;font-size:28px;margin:10px 0;flex-wrap:wrap}
+.box{min-width:150px;height:64px;border:3px solid #3a6fd8;border-radius:10px;display:inline-flex;align-items:center;justify-content:flex-end;padding:0 12px;font-size:30px;background:#f5f8ff;vertical-align:middle}
+.box.cur{box-shadow:0 0 0 3px #e8891d}.box.ok{border-color:#2e9e5b;background:#e8f7ee}.box.sm{min-width:110px;height:56px;font-size:26px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;font-size:24px}
+.tenkey{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;margin:10px 0}
+.tenkey button{min-height:64px;font-size:30px;padding:0}
+.msg{border-left:6px solid #e8891d;background:#fff4e6;padding:10px 14px;margin:10px 0;border-radius:8px;font-size:22px;line-height:1.5}
+.msg.ok{border-color:#2e9e5b;background:#e8f7ee}.msg.info{border-color:#3a6fd8;background:#eef3fc}
+.chr{display:flex;align-items:center;gap:10px;margin:8px 0}.chr svg{width:84px;height:84px;flex:none}
+.say{border:2px solid #ccc;border-radius:14px;padding:8px 12px;font-size:20px;background:#fafafa;position:relative}
+.opts{display:flex;flex-direction:column;gap:10px;margin:10px 0;max-width:720px}.opts button{text-align:left;font-size:24px;line-height:1.4}
+.ovl{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column}
+.ovl .ohead{flex:none;padding:8px 16px;border-bottom:2px solid #ddd;font-size:22px;font-weight:bold;background:#eef3fc}
+.ovl .body{flex:1;overflow:auto;padding:12px 16px}.ovl .bar{flex:none;padding:8px 12px;border-top:2px solid #ddd;display:flex;gap:8px}.ovl .bar button{flex:1}
+.repList{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.repList button{min-height:96px;font-size:22px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}.repList button small{font-size:16px;color:#666}
+svg.w{width:100%;max-width:760px;height:auto;touch-action:none;display:block;margin:8px 0;border:1px solid #eee;border-radius:8px}
+.flash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:56px;color:#2e9e5b;background:rgba(255,255,255,.9);z-index:300;font-weight:bold}
+.flash small{font-size:24px;color:#444;font-weight:normal;margin-top:10px}
+.code{font-family:Menlo,Consolas,monospace;font-size:18px;word-break:break-all;border:2px solid #888;padding:10px;border-radius:8px;background:#f6f6f6;-webkit-user-select:text;user-select:text;line-height:1.5}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;max-width:760px}
+.map div{border:2px solid #2e9e5b;border-radius:8px;text-align:center;padding:6px 2px;font-size:15px;line-height:1.3}.map .full{background:#2e9e5b;color:#fff}.map .half{background:#bfe6cd}.map .none{border-color:#ccc;color:#999}
+.send{font-size:16px;color:#555;white-space:nowrap}.send.ok{color:#2e9e5b}.send.ng{color:#e8891d}
+.sel{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;max-width:900px}
+.sel button{min-height:84px;font-size:18px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.3}.sel button b{font-size:24px}.sel button.on{background:#3a6fd8;color:#fff}
+.sel button.on small{color:#dde}.sel small{color:#666}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:10px;z-index:400;font-size:20px;max-width:90%}
+.title{display:inline-block;border:2px solid #e8891d;color:#e8891d;border-radius:20px;padding:4px 14px;margin:4px;font-size:18px}
+.cards{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.cards button{min-height:56px;font-size:20px}
+.order{display:flex;flex-direction:column;gap:6px;margin:8px 0}.order div{border:2px solid #2e9e5b;border-radius:8px;padding:8px 12px;background:#e8f7ee;font-size:22px}
+ruby rt{font-size:.5em}
+.note{font-size:18px;color:#555;line-height:1.5}
+.chk{display:flex;align-items:center;gap:10px;font-size:22px;margin:8px 0}.chk button{min-height:56px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><span class="t" id="ht">平均</span><div id="dots"></div><span class="send" id="sendst"></span><button class="sm" id="endbtn" style="display:none">おわる</button></header>
+  <main id="main"></main>
+  <footer id="foot"></footer>
+</div>
+<script id="data">
+// =====================================================================
+// ★ 先生が書きかえる場所 ①：送り先の設定
+//   webhookUrl … Power Automate「HTTP 要求の受信時」のURL。入れると自動で先生に届く
+//   formsUrl   … Forms の事前入力URL（__BAN__ などの記号入り）。入れると終了画面に「先生に送る」ボタンが出る
+//   どちらも空でも動く（記録コードを児童が Teams に貼る）
+// =====================================================================
+const CONFIG = {
+  unit: '平均',
+  webhookUrl: '',
+  formsUrl: '',
+  variants: true,      // 類題（数値をかえた問題）を出すか。授業で使わないときは false
+  autoSendEvery: true, // 1問ごとに自動で送る（false にすると終了時だけ）
+  testFormat: 'mix'    // 単元末テストの出し方：'mix'（数を入れる問題と組み立て問題を交互）／'number'（全部数を入れる）／'build'（全部組み立て）
+};
+
+// ---------- 小さな道具 ----------
+const sum = a => a.reduce((x, y) => x + y, 0);
+const fx = x => parseFloat(x.toFixed(6));            // 0.1+0.2 のゴミを消す
+const rnd = (x, k) => { const p = Math.pow(10, k); return Math.round(x * p + 1e-9) / p; };
+const trunc = (x, k) => { const p = Math.pow(10, k); return Math.floor(x * p + 1e-9) / p; };
+const near = (a, b, e) => Math.abs(a - b) < (e || 1e-6);
+const fmt = x => String(fx(x));
+const J = a => a.map(fmt).join('＋');
+const R = (k, r) => '<ruby>' + k + '<rt>' + r + '</rt></ruby>';   // ふりがな
+const RUBY_SS = R('四捨五入', 'ししゃごにゅう');
+const RUBY_MILK = R('牛乳', 'ぎゅうにゅう');
+
+// =====================================================================
+// ★ 先生が書きかえる場所 ②：つまずき分類（id・名前・児童に見せる一言・練習にもどる先）
+// =====================================================================
+const MISC = {
+  'm-count':   { code: 'C', name: '個数のまちがい',            msg: 'わる数は「いくつあるか」だよ。表の数を1つずつ数えてみよう。', pre: 'pre-table' },
+  'm-zero':    { code: 'Z', name: '0をぬいてわった',            msg: '0のときも1回に数えるよ。0も入れて、個数を数えよう。' },
+  'm-avg2':    { code: 'A', name: '平均と新しい数を2でわった',  msg: '平均は「全部をならした量」だよ。先に、もとの合計を出そう。' },
+  'm-outlier': { code: 'O', name: 'とびぬけた数のあつかい',      msg: 'とびぬけた数を入れたままになっていないかな。' },
+  'm-round':   { code: 'R', name: '四捨五入の位',               msg: 'どの位まで求めるのか、もう一度たしかめよう。', pre: 'pre-round' },
+  'm-kari':    { code: 'K', name: '基準にもどしていない',        msg: 'それは「基準より上の部分」の平均だよ。基準の数をたそう。' },
+  'm-reverse': { code: 'V', name: 'かけるとわるが反対',          msg: '全部の量は「平均×個数」だよ。わるのではなく、かけよう。' },
+  'm-calc':    { code: 'L', name: '計算のまちがい',              msg: '式は合っているよ。計算をもう一度たしかめよう。', pre: 'pre-div' },
+  'm-unit':    { code: 'U', name: '単位',                        msg: '単位をたしかめよう。何で答えるのかな。', pre: 'pre-unit' }
+};
+
+// =====================================================================
+// ★ 先生が書きかえる場所 ③：図（考え方）の名前
+//    各問題の reps に、おすすめ順に書く。画面に出るのは使えるもののうち先頭2つだけ
+// =====================================================================
+const REPS = {
+  'r-block':   { code: 'b', name: 'ブロックをならす',     sub: '多い列から少ない列へ動かす' },
+  'r-cup':     { code: 'c', name: 'コップの水を移す',     sub: '多いコップから少ないコップへ' },
+  'r-bar':     { code: 'g', name: 'ぼうグラフと横線',     sub: '横線を動かして、でこぼこを同じにする' },
+  'r-base':    { code: 'k', name: '基準より上を見る',     sub: '仮平均' },
+  'r-line':    { code: 'l', name: '数直線で予想する',     sub: '平均はどのあたり？' },
+  'r-tape':    { code: 't', name: 'テープ図',             sub: '平均が個数分ならぶと合計' },
+  'r-formula': { code: 'f', name: '式',                   sub: '' },
+  'r-words':   { code: 'w', name: '言葉でならべる',       sub: '' }
+};
+
+// =====================================================================
+// ★ 先生が書きかえる場所 ④：もどって考える問題（下の学年の内容）
+// =====================================================================
+const PREREQ = {
+  'pre-div':   { name: '小数になるわり算', items: [{ q: '483÷6＝？', a: 80.5 }, { q: '252÷4＝？', a: 63 }] },
+  'pre-dec':   { name: '小数のたし算・かけ算', items: [{ q: '9.56＋9.61＋9.44＝？', a: 28.61 }, { q: '2.3×30＝？', a: 69 }] },
+  'pre-round': { name: RUBY_SS, items: [{ q: '2.271 を 1/10 の位まで（1/100 の位で ' + RUBY_SS + '）', a: 2.3 }, { q: '9.536 を 1/100 の位まで', a: 9.54 }] },
+  'pre-table': { name: '表の読み取り', table: { head: ['曜日', '月', '火', '水', '木', '金'], rows: [['人数(人)', 1, 3, 0, 2, 1]] },
+                 items: [{ q: '表の数は、全部でいくつある？', a: 5 }, { q: '表の数を全部たすと？', a: 7 }] },
+  'pre-unit':  { name: '単位のかんさん', items: [{ q: '11700mL は 何L？', a: 11.7 }, { q: '630cm は 何m？', a: 6.3 }] }
+};
+
+// ---------- 問題をつくる道具（ここから下は、ふつうは書きかえない） ----------
+// sol … ヒントの1本道。{t:見出し, f:式, r:答え}。ヒントを押すたびに「式」→「その答えと次の式」→…→「答え」の順に1つずつ出る
+function solAvg(d, k, lead) {
+  const s = fx(sum(d)), n = d.length, ex = s / n;
+  const L = [{ t: lead || '合計', f: J(d), r: s }];
+  if (k == null) L.push({ t: '合計÷個数', f: fmt(s) + '÷' + n, r: fx(ex) });
+  else {
+    const tr = trunc(ex, k + 1);
+    L.push({ t: '合計÷個数', f: fmt(s) + '÷' + n, r: tr, more: !near(tr, ex) });
+    L.push({ t: RUBY_SS + 'する', f: fmt(tr) + (near(tr, ex) ? '' : '…') + ' を 1/' + Math.pow(10, k) + ' の位まで', r: rnd(ex, k) });
+  }
+  return L;
+}
+function miscAvg(d, k, extra) {
+  const s = fx(sum(d)), n = d.length, a = s / n, ans = k == null ? fx(a) : rnd(a, k);
+  const m = [];
+  if (d.includes(0)) { const nz = d.filter(v => v !== 0); m.push({ id: 'm-zero', vals: [sum(nz) / nz.length] }); }
+  if (extra) m.push(...extra);
+  if (k != null) m.push({ id: 'm-round', vals: [rnd(a, k + 1), trunc(a, k), rnd(a, Math.max(k - 1, 0)), fx(a)] });
+  m.push({ id: 'm-count', vals: [s / (n - 1), s / (n + 1)] });
+  m.forEach(x => x.vals = x.vals.filter(v => !near(v, ans)));
+  return m;
+}
+// 平均を求める小問
+// expr … 「式をえらぶ」の正しい式。wrong … まちがいの式（つまずきから作る）。fig … 「図をえらぶ」の正しい図の種類
+function avgWrong(d, all) {
+  const n = d.length, w = [];
+  if (all) w.push('(' + J(all) + ')÷' + all.length);
+  if (d.includes(0)) { const nz = d.filter(v => v !== 0); w.push('(' + J(nz) + ')÷' + nz.length); }
+  else w.push('(' + J(d) + ')÷' + (n - 1));
+  w.push('(' + fmt(Math.min(...d)) + '＋' + fmt(Math.max(...d)) + ')÷2');
+  w.push('(' + J(d) + ')×' + n);
+  return w;
+}
+const avgPart = (q, d, unit, o) => Object.assign({ q, type: 'number', unit, answer: o && o.k != null ? rnd(sum(d) / d.length, o.k) : fx(sum(d) / d.length), round: o && o.k,
+  sol: solAvg(d, o && o.k, o && o.lead), misc: miscAvg(d, o && o.k, o && o.extra), pre: o && o.k != null ? 'pre-round' : 'pre-div',
+  expr: '(' + J(d) + ')÷' + d.length, wrong: avgWrong(d, o && o.all), fig: 'level' }, o && o.more);
+// 平均×個数 の小問
+const mulPart = (q, a, n, unit, label) => ({ q, type: 'number', unit, answer: fx(a * n), sol: [{ t: label || '全部（平均×個数）', f: fmt(a) + '×' + n, r: fx(a * n) }],
+  misc: [{ id: 'm-reverse', vals: [a / n, n / a] }], pre: 'pre-dec', tape: { avg: a, n, dir: 'total' }, reps: ['r-tape'],
+  expr: fmt(a) + '×' + n, wrong: [fmt(a) + '÷' + n, fmt(a) + '＋' + n, n + '÷' + fmt(a)], fig: 'repeat' });
+const tbl = (head, row) => ({ head, rows: [row] });
+const circ = n => Array.from({ length: n }, (_, i) => '①②③④⑤⑥⑦⑧⑨⑩'[i]);
+
+// 問題の「族」：同じ形で数値だけちがう問題を3つ（本問＋類題2つ）つくる
+//   sets[0]=本問 sets[1]=類題① sets[2]=類題② sets[3]=テスト用（なければ類題②の数）
+//   easy … 答えまでヒントを見たときに出す「やさしい数」の練習（計算がかんたんな数）
+//   pic  … 教科書と同じような絵（PICS の名前）
+const EXTRA = [];
+function fam(spec) {
+  const mk = (d, i, suf) => Object.assign({ id: spec.id + suf, base: spec.id, vi: i, page: spec.page, title: spec.title, reps: spec.reps, pic: spec.pic }, spec.make(d, i));
+  if (spec.easy) EXTRA.push(mk(spec.easy, 3, 'e'));
+  EXTRA.push(mk(spec.sets[3] || spec.sets[2], 4, 't'));
+  return spec.sets.slice(0, 3).map((d, i) => mk(d, i, ['', 'b', 'c'][i]));
+}
+
+// =====================================================================
+// ★ 先生が書きかえる場所 ⑤：問題データ。sets の数値をかえれば答え・ヒントは自動で計算される
+//    （本問は教科書そのまま。2つ目・3つ目が類題）
+//    reps … 図のおすすめ順（先頭2つが画面に出る）
+//    choice の hint … ヒントで出す一言（2回目のヒントで答えが出る）
+// =====================================================================
+const FAMILIES = [
+  fam({ id: 'p132-1', page: 'p.132 1', title: 'オレンジのジュース', pic: 'juice', easy: [80, 90, 70, 80, 80], sets: [[80, 100, 75, 80, 65], [90, 70, 85, 60, 95], [86, 92, 75, 80, 70]],
+    reps: ['r-cup', 'r-bar'],
+    make: d => ({ text: 'オレンジを' + d.length + '個しぼったら、それぞれ次の量のジュースがとれました。オレンジ1個からとれるジュースの量は、何mLとみればよいでしょうか。',
+      table: tbl(['オレンジ', ...circ(d.length)], ['ジュースの量(mL)', ...d]), d, unit: 'mL',
+      parts: [avgPart('ならすと、1個分は何mL？', d, 'mL')] }) }),
+
+  fam({ id: 'p133-2', page: 'p.133 2', title: 'オレンジ全部では', pic: 'basket', easy: [50, 10], sets: [[80, 20], [75, 30], [62, 14]],
+    reps: ['r-tape'],
+    make: ([a, n]) => ({ text: 'オレンジは、全部で' + n + '個あります。1個のオレンジからとれるジュースの量の平均を' + a + 'mLとすると、オレンジ全部では何mLのジュースがとれると考えられるでしょうか。',
+      d: [a], unit: 'mL', parts: [mulPart('全部で何mL？', a, n, 'mL', '全部の量（平均×個数）')] }) }),
+
+  fam({ id: 'p133-t1', page: 'p.133 たしかめ1', title: 'たまごの重さ', pic: 'eggs', easy: [60, 62, 58, 60], sets: [[59, 68, 61, 64], [55, 62, 60, 67], [57, 62, 60, 66]],
+    reps: ['r-bar', 'r-line'],
+    make: d => ({ text: d.length + '個のたまごの重さをはかったら、次のとおりでした。たまご1個の重さは、平均何gでしょうか。',
+      table: tbl(['たまご', ...circ(d.length)], ['重さ(g)', ...d]), d, unit: 'g',
+      parts: [avgPart('1個の重さは平均何g？', d, 'g')] }) }),
+
+  fam({ id: 'p133-t2', page: 'p.133 たしかめ2', title: 'たまご全部では', easy: [60, 10], sets: [[67, 40], [64, 25], [58, 36]],
+    reps: ['r-tape'],
+    make: ([a, n]) => ({ text: 'たまごが' + n + '個あります。そのうち何個かの重さをはかって平均を調べたら、' + a + 'gでした。たまご全部では、何gになると考えられるでしょうか。',
+      d: [a], unit: 'g', parts: [mulPart('全部で何g？', a, n, 'g', '全部の重さ（平均×個数）')] }) }),
+
+  fam({ id: 'p133-t3', page: 'p.133 たしかめ3', title: '1日に出るごみ', easy: [2, 2, 3, 1, 2, 3, 1], sets: [[1.6, 1.4, 2.2, 2.7, 1.7, 3.2, 3.1], [1.2, 1.8, 2.4, 2.0, 1.6, 2.9, 2.1], [2.1, 1.5, 2.6, 1.9, 2.4, 3.0, 2.8]],
+    reps: ['r-bar', 'r-line'],
+    make: d => { const a = rnd(sum(d) / d.length, 1), exact = sum(d) / d.length; const p2 = mulPart('30日間では何kg？（平均 ' + fmt(a) + 'kg を使って）', a, 30, 'kg', '30日分（平均×日数）');
+      if (!near(fx(exact), a)) p2.alsoOk = [{ value: fx(rnd(exact * 30, 1)), note: '考え方は合っているよ。教科書では ' + RUBY_SS + 'した平均 ' + fmt(a) + 'kg を使って ' + fmt(a * 30) + 'kg とするよ。' }];
+      return {
+      text: '下の表は、みわさんの家で1日に出るごみの量を調べたものです。1日に出るごみの量は、平均約何kgでしょうか。' + RUBY_SS + 'して、1/10 の位までのがい数で求めましょう。また、30日間では何kgのごみが出ると考えられるでしょうか。',
+      table: tbl(['曜日', '月', '火', '水', '木', '金', '土', '日'], ['ごみの量(kg)', ...d]), d, unit: 'kg', labels: ['月', '火', '水', '木', '金', '土', '日'],
+      parts: [avgPart('1日に出るごみは平均約何kg？（1/10 の位まで）', d, 'kg', { k: 1 }), p2] }; } }),
+
+  fam({ id: 'p134-2', page: 'p.134 2', title: 'もう1個しぼったら', pic: 'cup6', easy: [50, 3, 70], sets: [[80, 5, 83], [75, 4, 91], [60, 5, 66]],
+    reps: ['r-cup', 'r-tape'],
+    make: ([a, n, x]) => { const d = [...Array(n).fill(a), x], ans = fx((a * n + x) / (n + 1)); return {
+      text: n + '個のオレンジからとれるジュースの平均は' + a + 'mLでした。オレンジをもう1個しぼったら、' + x + 'mLのジュースがとれました。先にしぼった' + n + '個と合わせて、' + (n + 1) + '個のオレンジからとれるジュースの量の平均を求めましょう。',
+      d, unit: 'mL', labels: [...Array(n).fill('先の'), '新しい'],
+      parts: [{ q: (n + 1) + '個の平均は何mL？', type: 'number', unit: 'mL', answer: ans, pre: 'pre-div',
+        sol: [{ t: '先の' + n + '個の合計（平均×個数）', f: a + '×' + n, r: a * n }, { t: (n + 1) + '個の合計', f: (a * n) + '＋' + x, r: a * n + x }, { t: '合計÷個数', f: (a * n + x) + '÷' + (n + 1), r: ans }],
+        misc: miscAvg(d, null, [{ id: 'm-avg2', vals: [(a + x) / 2] }]), tape: { avg: a, n, dir: 'total' },
+        expr: '(' + a + '×' + n + '＋' + x + ')÷' + (n + 1), wrong: ['(' + a + '＋' + x + ')÷2', '(' + a + '×' + n + '＋' + x + ')÷' + n, '(' + a + '＋' + x + ')÷' + (n + 1)], fig: 'addnew' }] }; } }),
+
+  fam({ id: 'p135-3', page: 'p.135 3', title: '地図の上の長さ', pic: 'map', easy: [10.1, 10.3, 20.6, 10.2, 10.2], sets: [[20.5, 20.2, 40.3, 20.4, 20.1], [15.3, 15.1, 15.4, 30.9, 15.2], [12.4, 12.6, 25.0, 12.5, 12.5]],
+    reps: ['r-bar', 'r-line'],
+    make: d => { const names = ['れん', 'まい', 'だいき', 'えりか', 'あき']; const oi = d.indexOf(Math.max(...d)); const ex = d.filter((_, i) => i !== oi); return {
+      text: '下の表は、れんさんたちが地図の上で、学校から駅までの長さをはかった結果です。学校から駅までの長さは、何mmといえるでしょうか。',
+      table: tbl(['名前', ...names], ['長さ(mm)', ...d]), d, unit: 'mm', labels: names,
+      parts: [{ q: 'とびぬけて大きい数はどれ？', type: 'choice', tag: 'outlier', hint: '5つの数をくらべよう。1つだけ、ほかよりずっと大きい数があるよ。',
+                 options: d.map((v, i) => ({ t: names[i] + '　' + fmt(v) + 'mm', ok: i === oi, misc: 'm-outlier', msg: 'ほかの4人とくらべて、ずいぶんちがう数をさがそう。' })) },
+               avgPart('とびぬけた数をぬいて、正確な長さに近い平均を求めよう。何mm？', ex, 'mm', { lead: 'のこり4つの合計', extra: [{ id: 'm-outlier', vals: [sum(d) / d.length] }], all: d, more: { wd: ex, wlabels: names.filter((_, i) => i !== oi) } })] }; } }),
+
+  fam({ id: 'p135-t4', page: 'p.135 たしかめ4', title: '50m走の記録', easy: [9.0, 9.2, 18.0, 9.1], sets: [[9.56, 9.61, 18.16, 9.44], [8.92, 9.05, 8.98, 17.40], [10.12, 10.03, 19.55, 9.98]],
+    reps: ['r-bar', 'r-line'],
+    make: d => { const oi = d.indexOf(Math.max(...d)); const ex = d.filter((_, i) => i !== oi); const lb = ['1回め', '2回め', '3回め', '4回め']; return {
+      text: '下の表は、あゆみさんの50m走の記録を表しています。' + (oi + 1) + '回めは転んでしまいました。50mを走るのにかかる時間は、平均何秒といえるでしょうか。' + RUBY_SS + 'して 1/100 の位までのがい数で求めましょう。',
+      table: tbl(['回数', ...lb], ['記録(秒)', ...d]), d, unit: '秒', labels: lb,
+      parts: [{ q: '転んだ' + (oi + 1) + '回め（' + fmt(d[oi]) + '秒）は、どうする？', type: 'choice', tag: 'outlier', hint: '知りたいのは「ふつうに走ったときの時間」だよ。転んだ記録は、ふつうの走りかな。',
+                 options: [{ t: '入れないで平均を出す。転んだときの記録だから。', ok: true }, { t: '入れて平均を出す。全部の記録だから。', ok: false, misc: 'm-outlier', msg: '転んだ記録を入れると、ふつうに走ったときの時間からはなれてしまうよ。' }] },
+               avgPart('転んだ回をぬいて、平均何秒？（1/100 の位まで）', ex, '秒', { k: 2, lead: '転んだ回をぬいた合計', extra: [{ id: 'm-outlier', vals: [sum(d) / d.length, rnd(sum(d) / d.length, 2)] }], all: d, more: { wd: ex, wlabels: lb.filter((_, i) => i !== oi) } })] }; } }),
+
+  fam({ id: 'p136-4', page: 'p.136 4', title: 'サッカーの得点', pic: 'soccer', easy: [[2, 3, 2, 4, 4], [2, 3, 0, 4, 1]], sets: [[[4, 5, 3, 6, 5], [3, 4, 6, 0, 5]], [[2, 3, 5, 4, 1], [0, 4, 3, 5, 2]], [[1, 3, 2, 2, 4], [3, 2, 4, 0, 6]]],
+    reps: ['r-block', 'r-bar'],
+    make: ([A, B]) => { const aa = fx(sum(A) / 5), bb = fx(sum(B) / 5); const lb = ['1試合め', '2試合め', '3試合め', '4試合め', '5試合め']; return {
+      text: '下の表は、AチームとBチームの5試合の得点を表しています。この5試合の得点で、1試合の平均得点が多いのは、どちらのチームでしょうか。',
+      table: { head: ['試合', ...lb], rows: [['Aチーム(点)', ...A], ['Bチーム(点)', ...B]] }, d: A, unit: '点', labels: lb,
+      parts: [avgPart('Aチームの1試合の平均得点は何点？', A, '点'),
+               { q: 'Bチームには0点の試合があるね。0点の試合はどうする？', type: 'choice', tag: 'zero', hint: 'くらべるのは「5試合の平均」だよ。0点の試合も、試合をしたことにかわりはないね。',
+                 options: [{ t: '0点も1試合として入れて、5でわる。', ok: true }, { t: '0点の試合はぬいて、4でわる。', ok: false, misc: 'm-zero', msg: '0点でも試合はしたよね。0点も1試合に数えるよ。' }] },
+               avgPart('Bチームの1試合の平均得点は何点？', B, '点', { more: { wd: B } }),
+               { q: '平均得点が多いのはどちら？', type: 'choice', hint: 'A ' + fmt(aa) + '点 と B ' + fmt(bb) + '点 をくらべよう。',
+                 options: [{ t: 'Aチーム（' + fmt(aa) + '点）', ok: aa > bb, msg: '2つの平均をくらべよう。' }, { t: 'Bチーム（' + fmt(bb) + '点）', ok: bb > aa, msg: '2つの平均をくらべよう。' }] }] }; } }),
+
+  fam({ id: 'p137-t5', page: 'p.137 たしかめ5', title: 'わすれ物をした人数', easy: [2, 1, 0, 3, 4], sets: [[1, 3, 0, 2, 1], [2, 0, 1, 0, 3], [0, 2, 4, 1, 3]],
+    reps: ['r-block', 'r-bar'],
+    make: d => ({ text: '下の表は、先週、わすれ物をした人の数を表しています。わすれ物をした人は、平均何人でしょうか。',
+      table: tbl(['曜日', '月', '火', '水', '木', '金'], ['人数(人)', ...d]), d, unit: '人', labels: ['月', '火', '水', '木', '金'],
+      parts: [{ q: '0人の日はどうする？', type: 'choice', tag: 'zero', hint: '「先週の平均」だから、5日分で考えるよ。0人の日も1日だね。',
+                 options: [{ t: '0人の日も入れて、5でわる。', ok: true }, { t: '0人の日はぬいて、' + d.filter(v => v).length + 'でわる。', ok: false, misc: 'm-zero', msg: '0人の日も「わすれ物を調べた1日」だよ。' }] },
+               avgPart('平均何人？（人数の平均は小数になってもいいよ）', d, '人')] }) }),
+
+  fam({ id: 'p137-k', page: 'p.137 くふう', title: '仮平均で求める', pic: 'basebar', easy: [200, [204, 202, 206, 208]], sets: [[300, [323, 315, 308, 310]], [400, [412, 405, 418, 409]], [200, [207, 215, 203, 211]]],
+    reps: ['r-base', 'r-bar'],
+    make: ([b, d]) => { const df = d.map(v => v - b), da = fx(sum(df) / d.length), ans = fx(b + da); return {
+      text: '下の表は、第一小学校の子どもの数です。きりのよい数を基準にして、平均を求めましょう。',
+      table: tbl(['年度', '2021', '2022', '2023', '2024'], ['人数(人)', ...d]), d, unit: '人', labels: ['2021', '2022', '2023', '2024'], kbase: b,
+      parts: [{ q: '基準にする数は、どれがよい？', type: 'choice', hint: 'きりがよくて、どの数よりも少し小さい数をさがそう。',
+                 options: [{ t: String(b - 100), ok: false, msg: 'どの数からも遠いね。もっと近い数はないかな。' }, { t: String(b), ok: true }, { t: String(b + 10), ok: false, msg: String(b + 10) + 'より小さい数があるよ。' }, { t: String(b + 50), ok: false, msg: 'どの数よりも大きいね。' }] },
+               { q: '基準 ' + b + ' を使って、平均は何人？', type: 'number', unit: '人', answer: ans, pre: 'pre-div',
+                 sol: [{ t: '基準より上の部分の合計', f: df.join('＋'), r: sum(df) }, { t: '上の部分の平均', f: sum(df) + '÷' + d.length, r: da }, { t: '基準にたす', f: b + '＋' + fmt(da), r: ans }],
+                 misc: [{ id: 'm-kari', vals: [da, sum(df)] }, ...miscAvg(d)],
+                 expr: b + '＋(' + df.join('＋') + ')÷' + d.length, wrong: ['(' + df.join('＋') + ')÷' + d.length, b + '＋' + df.join('＋'), b + '＋(' + df.join('＋') + ')÷' + (d.length - 1)] }] }; } }),
+
+  fam({ id: 'p138-2', page: 'p.138 2', title: '歩はば', pic: 'steps', easy: [10, 5], sets: [[10, 6.3], [10, 5.8], [10, 7.0]],
+    reps: ['r-tape'],
+    make: ([n, L]) => ({ text: 'まどかさんが' + n + '歩歩いた長さを調べたら、' + fmt(L) + 'mでした。まどかさんの歩はばは、平均何mでしょうか。',
+      d: [L], unit: 'm', parts: [{ q: '歩はばは平均何m？', type: 'number', unit: 'm', answer: fx(L / n), pre: 'pre-div',
+        sol: [{ t: '1歩分（長さ÷歩数）', f: fmt(L) + '÷' + n, r: fx(L / n) }],
+        misc: [{ id: 'm-unit', vals: [L * 100 / n, L * 100] }, { id: 'm-calc', vals: [L / n / 10, L * n] }], tape: { total: L, n, dir: 'avg' },
+        expr: fmt(L) + '÷' + n, wrong: [fmt(L) + '×' + n, n + '÷' + fmt(L), fmt(L) + '＋' + n], fig: 'split' }] }) }),
+
+  fam({ id: 'p139-m1', page: 'p.139 まとめ', title: 'あきかんの数', easy: [4, 4, 3, 5, 4], sets: [[5, 6, 3, 2, 5], [4, 7, 3, 6, 5], [6, 2, 4, 3, 7]],
+    reps: ['r-block', 'r-bar'],
+    make: d => { const a = fx(sum(d) / d.length); return {
+      text: '下の表は、まきさんたちが' + R('地域', 'ちいき') + '活動でひろったあきかんの数を表しています。1人がひろった数は、平均何個でしょうか。また、まきさんの組の35人では、何個のあきかんがひろえると考えられるでしょうか。',
+      table: tbl(['名前', 'まき', 'ゆり', 'あつし', 'えり', 'けいた'], ['あきかんの数(個)', ...d]), d, unit: '個', labels: ['まき', 'ゆり', 'あつし', 'えり', 'けいた'],
+      parts: [avgPart('1人がひろった数は平均何個？', d, '個'), mulPart('35人では何個？', a, 35, '個', '35人分（平均×人数）')] }; } }),
+
+  fam({ id: 'p140-t1', page: 'p.140 1', title: 'じゃがいもの重さ', pic: 'potato', easy: [[100, 120, 110, 90, 80], 500, 5], sets: [[[134, 95, 157, 125, 89], 585, 5], [[120, 98, 143, 131, 113], 560, 5], [[110, 105, 130, 95, 120], 612, 5]],
+    reps: ['r-bar', 'r-line'],
+    make: ([d, t, n]) => ({ text: 'れなさんとそうたさんがほったじゃがいもの重さは、次のとおりでした。じゃがいも1個の重さは、それぞれ平均何gでしょうか。',
+      table: { head: ['れな', ...circ(5)], rows: [['重さ(g)', ...d]] }, note: 'そうた：' + n + '個で合計 ' + t + 'g', d, unit: 'g',
+      parts: [avgPart('れなさんのじゃがいもは、1個平均何g？', d, 'g'),
+               { q: 'そうたさんのじゃがいもは、1個平均何g？（' + n + '個で合計' + t + 'g）', type: 'number', unit: 'g', answer: fx(t / n), pre: 'pre-div', reps: ['r-tape'],
+                 sol: [{ t: '1個分（合計÷個数）', f: t + '÷' + n, r: fx(t / n) }], misc: [{ id: 'm-count', vals: [t / (n - 1), t / (n + 1)] }, { id: 'm-reverse', vals: [t * n] }], tape: { total: t, n, dir: 'avg' },
+                 expr: t + '÷' + n, wrong: [t + '×' + n, t + '÷' + (n - 1), t + '−' + n], fig: 'split' }] }) }),
+
+  fam({ id: 'p140-t2', page: 'p.140 2', title: '的当てゲーム', easy: [40, 3, 60], sets: [[35, 3, 55], [42, 3, 50], [30, 4, 55]],
+    reps: ['r-block', 'r-tape'],
+    make: ([a, n, x]) => { const d = [...Array(n).fill(a), x], ans = fx((a * n + x) / (n + 1)); return {
+      text: 'かおりさんが的当てゲームを' + n + '回やったところ、1回の得点の平均が' + a + '点になりました。' + (n + 1) + '回めとして、もう1回やったところ、得点は' + x + '点でした。' + (n + 1) + '回の的当てゲームでは、1回の得点の平均は何点になるでしょうか。',
+      d, unit: '点', labels: [...Array(n).fill('平均'), (n + 1) + '回め'],
+      parts: [{ q: (n + 1) + '回の平均は何点？', type: 'number', unit: '点', answer: ans, pre: 'pre-div',
+        sol: [{ t: n + '回の合計（平均×回数）', f: a + '×' + n, r: a * n }, { t: (n + 1) + '回の合計', f: (a * n) + '＋' + x, r: a * n + x }, { t: '合計÷回数', f: (a * n + x) + '÷' + (n + 1), r: ans }],
+        misc: miscAvg(d, null, [{ id: 'm-avg2', vals: [(a + x) / 2] }]), tape: { avg: a, n, dir: 'total' },
+        expr: '(' + a + '×' + n + '＋' + x + ')÷' + (n + 1), wrong: ['(' + a + '＋' + x + ')÷2', '(' + a + '×' + n + '＋' + x + ')÷' + n, '(' + a + '＋' + x + ')÷' + (n + 1)], fig: 'addnew' }] }; } }),
+
+  fam({ id: 'p140-t3', page: 'p.140 3', title: 'ふっとうするまでの時間', easy: [10, 10, 30, 10, 10], sets: [[12, 40, 14, 13, 11], [15, 13, 38, 14, 16], [9, 11, 10, 35, 12]],
+    reps: ['r-bar', 'r-line'],
+    make: d => { const oi = d.indexOf(Math.max(...d)); const ex = d.filter((_, i) => i !== oi); const lb = ['1回め', '2回め', '3回め', '4回め', '5回め']; return {
+      text: '下の表は、理科の実験で、水がふっとうするまでにかかった時間を表しています。ふっとうするまでにかかった時間は、平均何分といえるでしょうか。',
+      table: tbl(['実験回数', ...lb], ['時間(分)', ...d]), d, unit: '分', labels: lb,
+      parts: [{ q: (oi + 1) + '回めの' + d[oi] + '分だけ、とびぬけているね。どうする？', type: 'choice', tag: 'outlier', hint: 'ほかの4回は' + Math.min(...ex) + '〜' + Math.max(...ex) + '分なのに、1回だけ' + d[oi] + '分。何かあったのかもしれないね。',
+                 options: [{ t: '入れないで平均を出す。何かあったときの記録で、ふつうのときとちがうから。', ok: true }, { t: '入れて平均を出す。全部の記録だから。', ok: false, misc: 'm-outlier', msg: '知りたいのは「ふつうにふっとうするまでの時間」だね（p.135の50m走と同じ考え方）。' }] },
+               avgPart('とびぬけた回をぬいて、平均何分？', ex, '分', { lead: 'のこり4回の合計', extra: [{ id: 'm-outlier', vals: [sum(d) / d.length] }], all: d, more: { wd: ex, wlabels: lb.filter((_, i) => i !== oi) } })] }; } }),
+
+  fam({ id: 'p140-t4', page: 'p.140 4', title: '1日に飲む' + RUBY_MILK, easy: [400, 0, 400, 500, 300, 500, 700], sets: [[420, 0, 420, 520, 420, 510, 440], [380, 0, 400, 460, 420, 500, 430], [450, 0, 480, 520, 410, 440, 500]],
+    reps: ['r-bar', 'r-line'],
+    make: d => { const a = fx(sum(d) / 7); const lb = ['月', '火', '水', '木', '金', '土', '日']; return {
+      text: '下の表は、ひろきさんが1週間に飲んだ' + RUBY_MILK + 'の量を表しています。1日に飲んだ' + RUBY_MILK + 'の量は、平均何mLでしょうか。また、30日間では、何Lの' + RUBY_MILK + 'を飲むと考えられるでしょうか。',
+      table: tbl(['曜日', ...lb], [RUBY_MILK + 'の量(mL)', ...d]), d, unit: 'mL', labels: lb,
+      parts: [{ q: '火曜日は0mLだね。どうする？', type: 'choice', tag: 'zero', hint: '「1日に飲む量」の平均だから、飲まなかった日も1日に数えるよ。',
+                 options: [{ t: '0の日も入れて、7でわる。', ok: true }, { t: '0の日はぬいて、6でわる。', ok: false, misc: 'm-zero', msg: '飲まなかった日も1週間のうちの1日だよ。' }] },
+               avgPart('1日に平均何mL？', d, 'mL'),
+               { q: '30日間では何L？（平均' + fmt(a) + 'mL×30 を L で）', type: 'number', unit: 'L', answer: fx(a * 30 / 1000), pre: 'pre-unit', reps: ['r-tape'],
+                 sol: [{ t: '30日分（mL）', f: fmt(a) + '×30', r: fx(a * 30) }, { t: 'L になおす（1000mL＝1L）', f: fx(a * 30) + '÷1000', r: fx(a * 30 / 1000) }],
+                 misc: [{ id: 'm-unit', vals: [a * 30, a * 30 / 100, a * 30 / 10] }, { id: 'm-reverse', vals: [a / 30] }], tape: { avg: a, n: 30, dir: 'total' },
+                 expr: fmt(a) + '×30÷1000', wrong: [fmt(a) + '×30', fmt(a) + '×30÷100', fmt(a) + '÷30÷1000'], fig: 'repeat' }] }; } })
+];
+
+// =====================================================================
+// 組み立て問題：「図をえらぶ → 式をえらぶ → 答えをえらぶ → 単位をえらぶ」
+//   練習では類題①で、テストでは1問おきに出る（CONFIG.testFormat で変えられる）
+// =====================================================================
+const UNIT_OPTS = { mL: ['mL', 'L', 'g'], L: ['L', 'mL', 'kg'], g: ['g', 'kg', 'mL'], kg: ['kg', 'g', 'L'], '秒': ['秒', '分', 'm'], '分': ['分', '秒', '時間'],
+  '点': ['点', '回', '人'], '人': ['人', '日', '個'], '個': ['個', '人', 'g'], m: ['m', 'cm', '歩'], mm: ['mm', 'cm', 'm'] };
+const FIG_TEXT = { level: 'でこぼこをならして、1つ分をもとめる', repeat: '1つ分が、いくつ分も集まって全部になる', split: '全部を同じに分けて、1つ分をもとめる',
+  mid2: '2つの数のまん中をもとめる', addnew: 'もとの平均が何こ分もあるところに、新しい1こをたしてならす' };
+const FIG_SET = { level: ['level', 'repeat', 'mid2'], repeat: ['repeat', 'split', 'level'], split: ['split', 'repeat', 'level'], addnew: ['addnew', 'mid2', 'repeat'] };
+function evalExpr(e) { try { return Function('return ' + e.replace(/＋/g, '+').replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-'))(); } catch (x) { return NaN; } }
+function canBuild(part) { return part.type === 'number' && !!part.expr; }
+function shuffle(a, seed) { let x = seed || 1; const r = () => (x = (x * 9301 + 49297) % 233280) / 233280; return a.map(v => [r(), v]).sort((p, q) => p[0] - q[0]).map(p => p[1]); }
+function seedOf(str) { let h = 7; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 100000; return h + 1; }
+function decOf(x) { return (String(fx(x)).split('.')[1] || '').length; }
+function buildSteps(P, part) {
+  const seed = seedOf(P.id + part.q), st = [];
+  if (part.fig && FIG_SET[part.fig]) st.push({ kind: 'fig', q: 'この問題に合う図はどれ？', options: shuffle(FIG_SET[part.fig].map(f => ({ fig: f, t: FIG_TEXT[f], ok: f === part.fig })), seed) });
+  // まちがいの式のうち、たまたま答えと同じ値になるものは出さない
+  const ex = [...new Set([part.expr, ...part.wrong.filter(w => !near(evalExpr(w), part.answer) && !(part.round != null && near(rnd(evalExpr(w), part.round), part.answer)))])].slice(0, 4);
+  st.push({ kind: 'expr', q: '正しい式はどれ？', options: shuffle(ex.map(e => ({ t: e, ok: e === part.expr })), seed + 1) });
+  const k = Math.max(decOf(part.answer), 1), vals = [];
+  (part.misc || []).forEach(m => m.vals.forEach(v => { const r = rnd(v, Math.min(k + 1, 3)); if (!near(r, part.answer) && !vals.some(x => near(x, r)) && r > 0) vals.push(r); }));
+  [part.answer * 10, part.answer / 10, part.answer + 1].forEach(v => { v = fx(v); if (vals.length < 3 && !vals.some(x => near(x, v))) vals.push(v); });
+  st.push({ kind: 'ans', q: '答えの数はどれ？', options: shuffle([{ t: fmt(part.answer), ok: true }, ...vals.slice(0, 3).map(v => ({ t: fmt(v), ok: false }))], seed + 2) });
+  const us = UNIT_OPTS[part.unit] || [part.unit];
+  st.push({ kind: 'unit', q: '答えの単位はどれ？', options: shuffle(us.map(u => ({ t: u, ok: u === part.unit })), seed + 3) });
+  return st;
+}
+
+const PROBLEMS = [].concat(...FAMILIES);
+const PBY = {}; PROBLEMS.concat(EXTRA).forEach(p => PBY[p.id] = p);
+const BASES = FAMILIES.map(f => f[0]);   // 本問17題（番号1〜17）
+</script>
+<script>
+// =====================================================================
+// エンジン（画面・判定・記録・送信）
+// =====================================================================
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function parseNum(s) {
+  if (s == null) return null;
+  s = String(s).replace(/[０-９．]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/。/g, '.').trim();
+  if (s === '' || s === '.' || !/^\d*\.?\d*$/.test(s)) return null;
+  return parseFloat(s);
+}
+// 誤答の値が「ある考え方で出る値」と同じか（四捨五入・切り捨てのゆれも同じとみなす）
+function matchVal(ans, v) { if (near(ans, v)) return true; for (const e of [0, 1, 2, 3]) { if (near(ans, trunc(v, e)) || (e > 0 && near(ans, rnd(v, e)))) return true; } return false; }
+function today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function hhmm() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); }
+const LS = 'heikin-session';
+let S = null;        // セッション（記録）
+let cur = null;      // いまの小問の状態
+let input = '';      // テンキーの入力
+let toastT = null;
+
+function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { } }
+function load() { try { const s = localStorage.getItem(LS); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function toast(t) { let el = $('.toast'); if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); } el.textContent = t; clearTimeout(toastT); toastT = setTimeout(() => el.remove(), 2200); }
+function render(html, foot) { $('#main').innerHTML = html; $('#foot').innerHTML = foot || ''; $('#main').scrollTop = 0; }
+function on(sel, fn) { document.querySelectorAll(sel).forEach(el => el.addEventListener('click', fn)); }
+
+// ---------- キャラクター「ならっち」 ----------
+function charSVG(mood) {
+  const eye = mood === 'happy' ? '<path d="M30 42q5-6 10 0M60 42q5-6 10 0" stroke="#333" stroke-width="3" fill="none"/>' :
+    mood === 'think' ? '<circle cx="35" cy="42" r="3.5" fill="#333"/><circle cx="65" cy="42" r="3.5" fill="#333"/><path d="M28 32l12 4M72 32l-12 4" stroke="#333" stroke-width="3"/>' :
+    '<circle cx="35" cy="42" r="4" fill="#333"/><circle cx="65" cy="42" r="4" fill="#333"/>';
+  const mouth = mood === 'happy' ? '<path d="M38 58q12 12 24 0" stroke="#333" stroke-width="3" fill="none"/>' : mood === 'think' ? '<path d="M42 60h16" stroke="#333" stroke-width="3"/>' : mood === 'bye' ? '<path d="M40 58q10 6 20 0" stroke="#333" stroke-width="3" fill="none"/>' : '<path d="M42 58q8 6 16 0" stroke="#333" stroke-width="3" fill="none"/>';
+  const arm = mood === 'bye' || mood === 'back' ? '<path d="M78 60l16-18" stroke="#e8891d" stroke-width="7" stroke-linecap="round"/>' : '<path d="M78 62l14 6" stroke="#e8891d" stroke-width="7" stroke-linecap="round"/>';
+  return '<svg viewBox="0 0 100 100"><rect x="18" y="12" width="64" height="8" rx="4" fill="#3a6fd8"/><rect x="46" y="18" width="8" height="8" fill="#3a6fd8"/>' +
+    '<ellipse cx="50" cy="58" rx="34" ry="32" fill="#f7c948" stroke="#333" stroke-width="2.5"/>' + eye + mouth + arm +
+    '<path d="M22 62l-14 6" stroke="#e8891d" stroke-width="7" stroke-linecap="round"/><ellipse cx="38" cy="90" rx="9" ry="5" fill="#333"/><ellipse cx="62" cy="90" rx="9" ry="5" fill="#333"/></svg>';
+}
+function chr(mood, say) { return '<div class="chr">' + charSVG(mood) + '<div class="say">' + say + '</div></div>'; }
+
+// ---------- 画面：はじめ ----------
+function renderStart() {
+  $('#endbtn').style.display = 'none'; $('#dots').innerHTML = ''; $('#sendst').textContent = '';
+  const saved = load(); const canResume = saved && saved.date === today() && !saved.done && saved.queue && saved.queue.length;
+  input = '';
+  render('<h1>平均</h1>' + chr('normal', 'こんにちは！ ぼくは「ならっち」。<br>出席番号を入れてね。') +
+    '<div class="ans">出席番号 <span class="box cur" id="inp"></span></div>' + tenkeyHTML() +
+    (canResume ? '<div class="msg info">' + saved.ban + '番のつづきが残っているよ。<br><button class="sm" id="resume">つづきからやる</button></div>' : ''),
+    '<button class="pri" id="go">つぎへ</button>');
+  bindTenkey(() => { $('#inp').textContent = input; });
+  on('#go', () => { const n = parseNum(input); if (n == null || n < 1 || n > 99 || !Number.isInteger(n)) return toast('1〜99 の番号を入れてね'); renderSelect(n); });
+  on('#resume', () => { S = saved; S.origin = S.origin || {}; S.fmt = S.fmt || {}; S.mode = S.mode || 'practice'; startProblem(); });
+}
+function tenkeyHTML() {
+  return '<div class="tenkey">' + ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫'].map(k => '<button data-k="' + k + '">' + k + '</button>').join('') + '</div>';
+}
+function bindTenkey(cb) {
+  on('.tenkey button', e => {
+    const k = e.currentTarget.dataset.k;
+    if (k === '⌫') input = input.slice(0, -1);
+    else if (k === '.') { if (!input.includes('.')) input = (input || '0') + '.'; }
+    else if (input.length < 8) input += k;
+    cb();
+  });
+}
+
+// ---------- 画面：今日やること ----------
+function renderSelect(ban) {
+  let sel = new Set(), mode = 'practice';
+  const draw = () => {
+    const test = mode === 'test';
+    render('<h2>' + ban + '番さん、' + (test ? '単元末テストの問題をえらぼう（ふつうは全部）' : '今日やる問題をえらぼう（先生の言う番号をおしてね）') + '</h2>' +
+      '<div class="modesw"><button class="sm ' + (test ? '' : 'on') + '" id="mp">れんしゅう</button><button class="sm ' + (test ? 'on' : '') + '" id="mt">単元末テスト</button></div>' +
+      '<div class="sel">' + BASES.map((p, i) => '<button data-i="' + i + '" class="' + (sel.has(i) ? 'on' : '') + '"><b>' + (i + 1) + '</b>' + p.title + '<small>' + p.page + '</small></button>').join('') + '</div>' +
+      '<div class="chk" style="margin-top:14px"><button class="sm" id="all">全部えらぶ</button><button class="sm" id="none">えらび直す</button>' +
+      (test ? '' : '<button class="sm ' + (CONFIG.variants ? 'ok' : '') + '" id="vtog">るい題（数をかえた問題）も ' + (CONFIG.variants ? 'やる' : 'やらない') + '</button>') + '</div>' +
+      (test ? '<div class="msg info">テストでは、ヒントと図は使えないよ。1問ずつ答えて「つぎへ」。まちがえても、そのまま進むよ。</div>' : ''),
+      '<button id="back">もどる</button><button class="pri" id="start" ' + (sel.size ? '' : 'disabled') + '>' + (test ? 'テストをはじめる' : 'はじめる') + '（' + sel.size + '問）</button>');
+    on('.sel button', e => { const i = +e.currentTarget.dataset.i; sel.has(i) ? sel.delete(i) : sel.add(i); draw(); });
+    on('#all', () => { sel = new Set(BASES.map((_, i) => i)); draw(); });
+    on('#none', () => { sel = new Set(); draw(); });
+    on('#vtog', () => { CONFIG.variants = !CONFIG.variants; draw(); });
+    on('#mp', () => { mode = 'practice'; draw(); });
+    on('#mt', () => { mode = 'test'; if (!sel.size) sel = new Set(BASES.map((_, i) => i)); draw(); });
+    on('#back', renderStart);
+    on('#start', () => startSession(ban, [...sel].sort((a, b) => a - b), mode));
+  };
+  draw();
+}
+function startSession(ban, idxs, mode) {
+  const queue = [];
+  if (mode === 'test') idxs.forEach(i => queue.push(BASES[i].base + 't'));
+  else idxs.forEach(i => { const f = FAMILIES[i]; queue.push(f[0].id); if (CONFIG.variants) queue.push(f[1].id, f[2].id); });
+  S = { ban, unit: CONFIG.unit, mode, date: today(), sid: today().replace(/-/g, '') + '-' + hhmm() + (mode === 'test' ? 'T' : ''), queue, pi: 0, pt: 0, items: {}, titles: [], origin: {}, fmt: {}, done: false, sendState: '', dirty: true };
+  // テストの出し方（数を入れる／組み立て）を先に決めておく
+  if (mode === 'test') { let c = 0; queue.forEach(e => qparts(e).forEach(t => { const part = PBY[qid(e)].parts[t]; if (!canBuild(part)) return; S.fmt[key(e, t)] = CONFIG.testFormat === 'build' ? 'build' : CONFIG.testFormat === 'number' ? 'number' : (c++ % 2 ? 'build' : 'number'); })); }
+  save(); startProblem();
+}
+
+// ---------- 問題のならび ----------
+// S.queue の1つ1つは 'p132-1' か、1つの小問だけを出す 'p132-1e@0' の形
+const key = (e, pt) => e + '#' + pt;
+const qid = e => e.split('@')[0];
+const qonly = e => e.includes('@') ? +e.split('@')[1] : null;
+const qparts = e => qonly(e) != null ? [qonly(e)] : PBY[qid(e)].parts.map((_, t) => t);
+const isTest = () => S && S.mode === 'test';
+function curE() { return S.queue[S.pi]; }
+function curP() { return PBY[qid(curE())]; }
+function curPart() { return curP().parts[S.pt]; }
+function curFmt() {
+  const part = curPart(), P = curP();
+  if (part.type === 'choice') return 'choice';
+  if (isTest()) return S.fmt[key(curE(), S.pt)] || 'number';
+  return canBuild(part) && P.vi === 1 ? 'build' : 'number';
+}
+function pnum(p) { const bi = BASES.findIndex(b => b.id === p.base); return (bi + 1) + ['', ' のるい題①', ' のるい題②', ' のれんしゅう', ''][p.vi]; }
+
+function startProblem() {
+  $('#endbtn').style.display = ''; $('#endbtn').onclick = () => { if (confirmEnd) return; confirmEndAsk(); };
+  input = '';
+  const only = qonly(curE()); if (only != null) S.pt = only;
+  cur = { attempts: 0, hint: 0, reps: [], misc: [], stuck: null, pre: [], wrong: [], t0: Date.now(), preOffered: false, bstep: 0, bbits: [], bpick: [], btries: 0 };
+  renderProblem();
+}
+let confirmEnd = false;
+function confirmEndAsk() {
+  confirmEnd = true;
+  $('#foot').innerHTML = '<button id="no">まだやる</button><button class="warn" id="yes">おわって先生に送る</button>';
+  on('#no', () => { confirmEnd = false; renderFoot(); }); on('#yes', () => { confirmEnd = false; finish(); });
+}
+function updHead() {
+  $('#ht').textContent = CONFIG.unit + (isTest() ? ' テスト' : '');
+  let h = '';
+  S.queue.forEach((e, i) => qparts(e).forEach(t => { const r = S.items[key(e, t)]; const c = r ? (isTest() ? 'done' : r.ok ? (r.first ? 'full' : 'half') : '') : ''; h += '<span class="dot ' + c + (i === S.pi && t === S.pt && !S.done ? ' cur' : '') + '"></span>'; }));
+  $('#dots').innerHTML = h;
+  const st = $('#sendst');
+  if (!CONFIG.webhookUrl) { st.textContent = ''; return; }
+  st.className = 'send ' + (S.sendState === 'sent' ? 'ok' : S.sendState === 'fail' ? 'ng' : '');
+  st.textContent = S.sendState === 'sent' ? '先生に送った ✓' : S.sendState === 'sending' ? '送っています…' : S.sendState === 'fail' ? '送れていない' : '';
+}
+function tableHTML(t) { if (!t) return ''; return '<table class="tb"><tr>' + t.head.map(h => '<th>' + h + '</th>').join('') + '</tr>' + t.rows.map(r => '<tr>' + r.map((c, i) => (i ? '<td>' : '<th>') + c + (i ? '</td>' : '</th>')).join('') + '</tr>').join('') + '</table>'; }
+// 組み立て問題では、問いの「何mL」などを消す（単位も自分でえらぶため）
+const unitFree = q => q.replace(/何(mL|L|kg|g|mm|m|秒|分|点|人|個)/g, 'いくつ').replace(/（[^）]*を L で）/, '');
+
+function renderProblem() {
+  updHead();
+  const P = curP(), part = curPart(), f = curFmt();
+  let h = '<div class="q"><span class="pn">' + pnum(P) + '</span>' + P.title + '　<span class="note">' + P.page + '</span></div>';
+  h += '<div class="q">' + P.text + '</div>' + (P.pic && PICS[P.pic] ? '<div class="pic">' + PICS[P.pic](P) + '</div>' : '') + tableHTML(P.table) + (P.note ? '<div class="qs">' + P.note + '</div>' : '');
+  if (P.parts.length > 1) h += '<div class="qs">（' + (S.pt + 1) + '／' + P.parts.length + '）</div>';
+  h += '<div class="q" style="color:#3a6fd8">' + (f === 'build' ? unitFree(part.q) : part.q) + '</div>';
+  h += '<div id="hintcard"></div><div id="msg"></div><div id="inarea"></div><div id="chr">' + chr('normal', isTest() ? 'よく読んで、答えよう。' : f === 'build' ? '図・式・答え・単位の順にえらんでね。' : f === 'choice' ? 'あてはまるものをおしてね。' : 'できたら「できた」をおしてね。') + '</div>';
+  render(h, '');
+  renderFoot(); renderHint(); renderInput();
+}
+// 下のボタン：図（青・左）／ヒント（橙・まん中）／できた（緑・右）。テストではヒントと図は出さない
+function renderFoot() {
+  const part = curPart(), f = curFmt();
+  if (isTest()) { $('#foot').innerHTML = f === 'number' ? '<button class="ok" id="okbtn"><span class="ic">✓</span>できた（つぎへ）</button>' : ''; on('#okbtn', submit); return; }
+  const nx = hintNextLabel(part), nreps = availableReps(curP(), part).length;
+  $('#foot').innerHTML = '<button class="fig" id="repbtn" ' + (nreps ? '' : 'disabled') + '><span class="ic">' + FIG_ICON + '</span>図で考える</button>' +
+    '<button class="hint" id="hintbtn" ' + (nx ? '' : 'disabled') + '><span class="ic">💡</span>' + (nx ? 'ヒント<small>' + nx + '</small>' : 'ヒントはここまで') + '</button>' +
+    (f === 'number' ? '<button class="ok" id="okbtn"><span class="ic">✓</span>できた</button>' : '');
+  on('#repbtn', () => openReps()); on('#hintbtn', () => { hintNext(); markDirty(); }); on('#okbtn', submit);
+}
+const FIG_ICON = '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="3" y="12" width="4" height="9" fill="currentColor"/><rect x="10" y="6" width="4" height="15" fill="currentColor"/><rect x="17" y="9" width="4" height="12" fill="currentColor"/><line x1="1" y1="11" x2="23" y2="11" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/></svg>';
+function renderInput() {
+  const part = curPart(), a = $('#inarea'), f = curFmt();
+  if (f === 'choice') {
+    a.innerHTML = '<div class="opts">' + part.options.map((o, i) => '<button data-i="' + i + '"' + (cur.hint >= 2 && o.ok ? ' class="mark"' : '') + '>' + '①②③④⑤'[i] + ' ' + o.t + '</button>').join('') + '</div>';
+    on('.opts button', e => choose(+e.currentTarget.dataset.i));
+    return;
+  }
+  if (f === 'build') return renderBuild();
+  a.innerHTML = '<div class="ans">答え <span class="box cur" id="inp">' + input + '</span> ' + part.unit + '</div>' + tenkeyHTML();
+  bindTenkey(() => { $('#inp').textContent = input; });
+}
+function showMsg(t, cls, mood, say) { $('#msg').innerHTML = t ? '<div class="msg ' + (cls || '') + '">' + t + '</div>' : ''; if (say) $('#chr').innerHTML = chr(mood || 'think', say); }
+
+// ---------- 組み立て問題（図 → 式 → 答え → 単位） ----------
+const BNAME = { fig: '図', expr: '式', ans: '答え', unit: '単位' };
+function bsteps() { if (!cur.bs) cur.bs = buildSteps(curP(), curPart()); return cur.bs; }
+function renderBuild() {
+  const st = bsteps(), k = cur.bstep, s = st[k], a = $('#inarea');
+  let h = '<div class="bprog">' + st.map((x, i) => '<span class="' + (i < k ? 'done' : i === k ? 'now' : '') + '">' + '①②③④'[i] + ' ' + BNAME[x.kind] + (i < k && !isTest() ? '：' + (x.kind === 'fig' ? '✓' : cur.bpick[i]) : '') + '</span>').join('<span class="arr">→</span>') + '</div>';
+  h += '<div class="q" style="font-size:24px">' + s.q + '</div>';
+  if (s.kind === 'fig') h += '<div class="figopts">' + s.options.map((o, i) => '<button data-i="' + i + '"' + (cur.hint > k && o.ok ? ' class="mark"' : '') + '>' + FIGTHUMB(o.fig) + '<span>' + o.t + '</span></button>').join('') + '</div>';
+  else h += '<div class="opts ' + (s.kind === 'expr' ? '' : 'row4') + '">' + s.options.map((o, i) => '<button data-i="' + i + '"' + (cur.hint > k && o.ok ? ' class="mark"' : '') + '>' + o.t + '</button>').join('') + '</div>';
+  a.innerHTML = h;
+  a.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => bchoose(+b.dataset.i)));
+}
+const BMSG = { fig: 'この問題は、何をもとめるのかな。問題文をもう一度読もう。', expr: '何をたして、何でわる（かける）のかな。もう一度たしかめよう。', ans: '式を計算すると、いくつになるかな。', unit: '何をはかっているのかな。表や問題文の単位を見よう。' };
+function bchoose(i) {
+  const st = bsteps(), s = st[cur.bstep], o = s.options[i];
+  if (isTest()) {
+    cur.bbits.push(o.ok ? 1 : 0); cur.bpick.push(o.t);
+    cur.bstep++; if (cur.bstep < st.length) return renderBuild();
+    return testRecord(cur.bbits.every(b => b), { b: cur.bbits.join('') });
+  }
+  if (o.ok) {
+    cur.bbits.push(cur.btries === 0 && cur.hint <= cur.bstep ? 1 : 0); cur.bpick.push(o.t); cur.btries = 0; cur.bstep++;
+    showMsg('', '', 'happy', cur.bstep < st.length ? 'いいね！ つぎは「' + BNAME[st[cur.bstep].kind] + '」。' : 'できた！');
+    if (cur.bstep >= st.length) return correct();
+    renderBuild(); renderFoot(); return;
+  }
+  cur.attempts++; cur.btries++; cur.wrong.push(s.kind + ':' + o.t);
+  if (cur.btries >= 2 && cur.hint <= cur.bstep) { cur.hint = cur.bstep + 1; renderFoot(); }
+  showMsg('ここで考えよう：' + BMSG[s.kind], '', 'think', 'もう一度えらんでみよう。');
+  renderBuild(); markDirty();
+}
+
+// ---------- ヒント：おすすめの1本道（押すたびに1つずつ出る。えらぶことはない） ----------
+// number：式 → その答えと次の式 → … → 答え　／　choice：考えるための一言 → 答え　／　build：いまの段の答えに印
+function hintMax(part) { const f = curFmt(); return f === 'build' ? bsteps().length : part.type === 'choice' ? 2 : part.sol.length + 1; }
+function hintNextLabel(part) {
+  const L = cur.hint, M = hintMax(part), f = curFmt();
+  if (f === 'build') return cur.hint > cur.bstep ? null : 'この「' + BNAME[bsteps()[cur.bstep].kind] + '」の答えを見る';
+  if (L >= M) return null;
+  if (f === 'choice') return L === 0 ? '考え方を見る' : '答えを見る';
+  if (L === 0) return '式を見る';
+  return L === M - 1 ? '答えを見る' : '計算の答えを見る';
+}
+function hintNext() {
+  const part = curPart(), f = curFmt();
+  if (f === 'build') { if (cur.hint <= cur.bstep) { cur.hint = cur.bstep + 1; renderBuild(); renderFoot(); } return; }
+  if (cur.hint >= hintMax(part)) return;
+  cur.hint++;
+  if (f === 'number' && cur.hint >= 2) cur.stuck = part.sol[cur.hint - 2].t;
+  renderHint(); renderFoot();
+  if (f === 'choice' && cur.hint >= 2) renderInput();
+  const hc = $('#hintcard'); if (hc) hc.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function renderHint() {
+  const part = curPart(), L = cur.hint, el = $('#hintcard'), f = curFmt();
+  if (!L || f === 'build') { el.innerHTML = ''; return; }
+  let h = '<div class="hcard"><div class="hh">💡 ヒント</div>';
+  if (f === 'choice') {
+    h += '<div class="hl">' + part.hint + '</div>';
+    if (L >= 2) { const i = part.options.findIndex(o => o.ok); h += '<div class="hl">答えは <b>' + '①②③④⑤'[i] + ' ' + part.options[i].t + '</b></div>'; }
+  } else {
+    part.sol.forEach((s, i) => {
+      if (L < i + 1) return;
+      const showR = L >= i + 2, last = i === part.sol.length - 1;
+      h += '<div class="hl"><span class="ht">' + (part.sol.length > 1 ? '①②③④'[i] + ' ' : '') + s.t + '</span><span class="hf">' + s.f + '</span>' +
+        (showR ? '<span class="hr">＝ ' + fmt(s.r) + (s.more ? '…' : '') + (last ? ' ' + part.unit : '') + '</span>' : '<span class="hq">＝ ？</span>') + '</div>';
+    });
+    if (L === 1) h += '<div class="hn">計算して、答えを入れてみよう。計算がむずかしいときは、もう一度ヒントをおしてね。</div>';
+    else if (L <= part.sol.length) h += '<div class="hn">つぎの式も計算してみよう。</div>';
+    else h += '<div class="hn">答えをテンキーで入れて「できた」をおそう。</div>';
+  }
+  el.innerHTML = h + '</div>';
+}
+
+// ---------- 判定 ----------
+// 意味のつまずき（図で見るのがおすすめ）と、計算のつまずき（式・計算の答えがおすすめ）を分ける
+const CONCEPT = ['m-avg2', 'm-count', 'm-zero', 'm-outlier', 'm-kari', 'm-reverse'];
+function isAns(v, ans) { return near(v, ans, 1e-6); }
+function detectMisc(v, part) {
+  for (const m of (part.misc || [])) { if (m.vals.some(x => matchVal(v, x))) return m.id; }
+  return null;
+}
+function submit() {
+  const part = curPart();
+  const v = parseNum(input);
+  if (v == null) return toast('数を入れてから「できた」をおしてね');
+  if (isTest()) return testRecord(isAns(v, part.answer) || (part.alsoOk || []).some(o => isAns(v, o.value)), { v, misc: isAns(v, part.answer) ? null : detectMisc(v, part) });
+  if (isAns(v, part.answer)) return correct();
+  const alt = (part.alsoOk || []).find(o => isAns(v, o.value));
+  if (alt) { showMsg(alt.note, 'ok'); return setTimeout(correct, 2500); }
+  cur.attempts++; cur.wrong.push(v); input = '';
+  const mid = detectMisc(v, part), reps = availableReps(curP(), part);
+  let t, figBtn = '';
+  if (mid && !cur.misc.includes(mid)) {
+    cur.misc.push(mid); t = 'ここで考えよう：' + MISC[mid].msg;
+    if (CONCEPT.includes(mid) && reps.length) figBtn = '<br><button class="sm figrec" id="gofig">' + FIG_ICON + ' ' + REPS[reps[0]].name + 'で見てみよう</button>';
+  }
+  else if (cur.hint < hintMax(part)) { hintNext(); t = 'ヒントを見て、もう一度やってみよう。'; }
+  else t = 'ヒントの答えを、そのまま入れてみよう。';
+  // 計算のつまずきが見えたときだけ、練習へもどる道を出す（自動では行かない）
+  const pre = mid ? MISC[mid].pre : (cur.hint >= 1 ? part.pre : null);
+  let preBtn = '';
+  if (!figBtn && pre && PREREQ[pre] && !cur.preOffered) { cur.preOffered = true; preBtn = '<br><button class="sm pre" id="gopre">' + PREREQ[pre].name + ' のれんしゅうをする</button>'; }
+  showMsg(t + figBtn + preBtn, '', 'think', 'もう一度やってみよう。');
+  on('#gopre', () => runPrereq(pre)); on('#gofig', () => openReps(reps[0]));
+  renderInput(); markDirty();
+}
+function choose(i) {
+  const part = curPart(), o = part.options[i];
+  if (isTest()) return testRecord(!!o.ok, { v: i + 1, misc: o.ok ? null : o.misc });
+  if (o.ok) { if (part.tag === 'zero' && cur.attempts === 0) earn('zero'); return correct(); }
+  cur.attempts++; cur.wrong.push(i + 1);
+  if (o.misc && !cur.misc.includes(o.misc)) cur.misc.push(o.misc);
+  if (cur.attempts >= 2 && cur.hint < hintMax(part)) hintNext();
+  showMsg('ここで考えよう：' + (o.msg || part.hint), '', 'think', 'もう一度えらんでみよう。');
+  markDirty();
+}
+function correct() {
+  const first = cur.attempts === 0 && cur.hint === 0 && cur.reps.length === 0 && cur.pre.length === 0;
+  finishPart(true, first);
+}
+function finishPart(ok, first) {
+  const P = curP(), e = curE(), k = key(e, S.pt), sawAns = cur.hint >= hintMax(curPart());
+  S.items[k] = { ok: ok ? 1 : 0, first: first ? 1 : 0, hint: cur.hint, hmax: hintMax(curPart()), reps: cur.reps, misc: cur.misc, stuck: cur.stuck, pre: cur.pre, sec: Math.round((Date.now() - cur.t0) / 1000), wrong: cur.wrong, b: cur.bbits.join('') };
+  if (first) earn('first');
+  // やさしい数の練習で、答えを見ずにできたら、もとの問題も「練習でできた」にする
+  if (P.vi === 3 && S.origin[e] && !sawAns && S.items[S.origin[e]]) S.items[S.origin[e]].redeem = 1;
+  // 答えまで見てできた → つぎに「やさしい数」で同じ形の問題を1つ入れる
+  let more = '';
+  const ez = P.base + 'e', ee = ez + '@' + S.pt;
+  if (sawAns && P.vi !== 3 && PBY[ez] && !S.queue.slice(S.pi + 1).includes(ee)) { S.queue.splice(S.pi + 1, 0, ee); S.origin[ee] = k; more = '<small>つぎは、やさしい数で もう1回やってみよう</small>'; }
+  checkStreak(); checkRepsTitle();
+  S.dirty = true; save(); scheduleSend();
+  const f = document.createElement('div'); f.className = 'flash'; f.innerHTML = '正解！' + charSVG('happy') + (more || (first ? '' : '<small>ヒントや図を使ってできたね</small>')); document.body.appendChild(f);
+  setTimeout(() => { f.remove(); nextPart(); }, more ? 1800 : 900);
+}
+// やさしい数の問題は、いまの問題（小問すべて）が終わってから出す
+function nextPart() {
+  input = '';
+  const e = curE(), ps = qparts(e), i = ps.indexOf(S.pt);
+  if (i + 1 < ps.length) S.pt = ps[i + 1];
+  else { S.pi++; S.pt = 0; }
+  if (S.pi >= S.queue.length) return finish();
+  save(); startProblem();
+}
+// テスト：答えを記録して、正誤は見せずに次へ
+function testRecord(ok, extra) {
+  const e = curE(), k = key(e, S.pt);
+  S.items[k] = Object.assign({ ok: ok ? 1 : 0, first: ok ? 1 : 0, test: 1, hint: 0, hmax: 0, reps: [], misc: extra.misc ? [extra.misc] : [], stuck: null, pre: [], sec: Math.round((Date.now() - cur.t0) / 1000), wrong: ok ? [] : [extra.v] }, extra.b ? { b: extra.b } : {});
+  S.dirty = true; save(); scheduleSend();
+  $('#main').style.opacity = .3; setTimeout(() => { $('#main').style.opacity = 1; nextPart(); }, 250);
+}
+
+// ---------- 称号 ----------
+const TITLES = { first: 'はじめの一歩（1回めで正解）', streak3: '自力の3れん（ヒントなしで3問つづけて）', reps2: '見方いろいろ（図を2しゅるい使った）', back: 'もどってきた（前の学年の練習から帰ってきた）', zero: '0もなかま（0を入れる判断ができた）', redo: 'やりなおし名人（やさしい数で自分でできた）', all: 'ならしの達人（今日の問題を全部やった）' };
+function earn(id) { if (isTest() || S.titles.includes(id)) return; S.titles.push(id); toast('しょうごう「' + TITLES[id] + '」'); }
+function checkStreak() { const vals = Object.values(S.items); let n = 0; for (let i = vals.length - 1; i >= 0 && vals[i].ok && vals[i].first; i--) n++; if (n >= 3) earn('streak3'); if (vals.some(r => r.redeem)) earn('redo'); }
+function checkRepsTitle() { const s = new Set(); Object.values(S.items).forEach(r => r.reps.forEach(x => s.add(x))); if (cur) cur.reps.forEach(x => s.add(x)); if (s.size >= 2) earn('reps2'); }
+
+// ---------- もどって考える（遡り）：児童がボタンを押したときだけ ----------
+function runPrereq(preId) {
+  const pre = PREREQ[preId]; let i = 0; const results = [];
+  const ov = document.createElement('div'); ov.className = 'ovl'; document.body.appendChild(ov);
+  const draw = () => {
+    input = '';
+    const it = pre.items[i];
+    ov.innerHTML = '<div class="ohead">れんしゅう：' + pre.name + '（' + (i + 1) + '／' + pre.items.length + '）</div><div class="body">' + chr('think', 'ここができれば、もとの問題もできるよ。') +
+      tableHTML(pre.table) + '<div class="q">' + it.q + '</div><div id="pmsg"></div><div class="ans">答え <span class="box cur" id="pinp"></span></div>' + tenkeyHTML() + '</div>' +
+      '<div class="bar"><button id="pquit">もとの問題にもどる</button><button class="ok" id="pok">できた</button></div>';
+    ov.querySelectorAll('.tenkey button').forEach(b => b.addEventListener('click', () => { const k = b.dataset.k; if (k === '⌫') input = input.slice(0, -1); else if (k === '.') { if (!input.includes('.')) input = (input || '0') + '.'; } else if (input.length < 8) input += k; ov.querySelector('#pinp').textContent = input; }));
+    ov.querySelector('#pquit').addEventListener('click', back);
+    ov.querySelector('#pok').addEventListener('click', () => {
+      const v = parseNum(input); if (v == null) return toast('数を入れてね');
+      const ok = isAns(v, it.a); results.push({ id: preId, ok: ok ? 1 : 0 });
+      ov.querySelector('#pmsg').innerHTML = ok ? '<div class="msg ok">そのとおり！</div>' : '<div class="msg info">答えは ' + fmt(it.a) + ' だよ。</div>';
+      ov.querySelector('.bar').innerHTML = '<button class="pri" id="pnext">' + (i + 1 < pre.items.length ? 'つぎへ' : 'もとの問題にもどる') + '</button>';
+      ov.querySelector('#pnext').addEventListener('click', () => { i++; if (i < pre.items.length) draw(); else back(); });
+    });
+  };
+  const back = () => { ov.remove(); cur.pre.push(...results); if (results.length) earn('back'); input = ''; renderInput(); showMsg('おかえり！ もとの問題をやってみよう。', 'ok', 'back', 'おかえり！'); markDirty(); };
+  draw();
+}
+
+// ---------- 図で考える：おすすめの2つだけ ----------
+function availableReps(P, part) {
+  return (part.reps || P.reps).filter(id => {
+    const d = part.wd || P.d;
+    if (id === 'r-block') return blockUnit(d) != null;
+    if (id === 'r-cup') return d.length >= 2 && d.length <= 8;
+    if (id === 'r-bar' || id === 'r-line') return d.length >= 2;
+    if (id === 'r-tape') return !!part.tape;
+    if (id === 'r-base') return typeof P.kbase === 'number';
+    return false;
+  }).slice(0, 2);
+}
+// direct … おすすめの図を1つ、えらばずにすぐ開く
+function openReps(direct) {
+  const P = curP(), part = curPart();
+  const reps = availableReps(P, part);
+  if (!reps.length) return;
+  const ov = document.createElement('div'); ov.className = 'ovl fig'; document.body.appendChild(ov);
+  const close = () => { ov.remove(); input = ''; renderInput(); $('#chr').innerHTML = chr('normal', '図で考えたことを使って、答えを入れてみよう。'); };
+  const list = () => {
+    ov.innerHTML = '<div class="ohead">' + FIG_ICON + ' 図で考える</div><div class="body">' + chr('normal', 'どっちの図で考える？') +
+      '<div class="repList">' + reps.map(id => '<button data-r="' + id + '"><b>' + REPS[id].name + '</b><small>' + REPS[id].sub + '</small></button>').join('') + '</div></div>' +
+      '<div class="bar"><button id="rclose">問題にもどる</button></div>';
+    ov.querySelector('#rclose').addEventListener('click', close);
+    ov.querySelectorAll('.repList button').forEach(b => b.addEventListener('click', () => show(b.dataset.r)));
+  };
+  const show = id => {
+    if (!cur.reps.includes(id)) cur.reps.push(id); checkRepsTitle(); markDirty();
+    ov.innerHTML = '<div class="ohead">' + FIG_ICON + ' ' + REPS[id].name + '</div><div class="body"><div class="q" style="font-size:22px">' + part.q + '</div><div id="wbody"></div></div><div class="bar">' +
+      (reps.length > 1 ? '<button id="rback">もう1つの図</button>' : '') + '<button class="pri" id="rclose">問題にもどる</button></div>';
+    const rb = ov.querySelector('#rback'); if (rb) rb.addEventListener('click', () => show(reps.find(r => r !== id)));
+    ov.querySelector('#rclose').addEventListener('click', close);
+    WIDGETS[id](ov.querySelector('#wbody'), widgetCtx(P, part));
+  };
+  direct && reps.includes(direct) ? show(direct) : reps.length === 1 ? show(reps[0]) : list();
+}
+function widgetCtx(P, part) {
+  const d = part.wd || P.d; const labels = part.wlabels || P.labels || d.map((_, i) => '①②③④⑤⑥⑦⑧⑨⑩'[i]);
+  return { d, labels, unit: part.unit, tape: part.tape, base: P.kbase, answer: part.answer };
+}
+
+// ---------- おわり・記録・送信 ----------
+const allKeys = () => S.queue.flatMap(e => qparts(e).map(t => [e, t]));
+function finish() {
+  S.done = true; S.dirty = true;
+  if (allKeys().every(([e, t]) => S.items[key(e, t)] && S.items[key(e, t)].ok)) earn('all');
+  save(); sendNow(false); renderEnd();
+}
+function recordJSON() {
+  return { ban: S.ban, unit: S.unit, mode: S.mode, date: S.date, sid: S.sid, done: S.done, titles: S.titles, items: S.items, code: recordCode(), summary: summary() };
+}
+function summary() {
+  const vals = Object.values(S.items); const ok = vals.filter(r => r.ok).length, first = vals.filter(r => r.first).length;
+  const hint = [0, 0, 0, 0]; let rep = 0, pre = 0; const reps = {}, misc = {};
+  vals.forEach(r => { if (r.hint) hint[r.hint >= r.hmax ? 3 : r.hint === 1 ? 1 : 2]++; if (r.reps.length) rep++; pre += r.pre.length; r.reps.forEach(x => reps[x] = (reps[x] || 0) + 1); r.misc.forEach(x => misc[x] = (misc[x] || 0) + 1); });
+  return { mon: vals.length, seikai: (isTest() ? 'テスト ' : '') + ok + '/' + vals.length + (isTest() ? '' : '(1回目' + first + ')'), hint: '式:' + hint[1] + ' 途中の答え:' + hint[2] + ' 答えまで:' + hint[3] + ' 図:' + rep + ' 遡り:' + pre,
+    hyogen: Object.keys(reps).map(k => k + ':' + reps[k]).join(' ') || 'なし', tsumazuki: Object.keys(misc).map(k => k + ':' + misc[k]).join(' ') || 'なし' };
+}
+// 記録コード： H5|番号|セッション|問題:結果/h段階/r表現/mつまずき/s答えを見た式/p遡り/b組み立て/e練習でできた/t秒;...
+//   結果 1=1回めで正解 2=ヒントなどで正解 0=未完（テストでは 1=正解 0=まちがい）
+function recordCode() {
+  const parts = allKeys().map(([e, t]) => {
+    const r = S.items[key(e, t)]; const k = qid(e) + (t ? '.' + (t + 1) : '');
+    if (!r) return k + ':0';
+    let s = k + ':' + (r.test ? (r.ok ? '1' : '0') : r.first ? '1' : '2');
+    if (r.hint) s += '/h' + r.hint + (r.hint >= r.hmax ? 'x' : '');
+    if (r.reps.length) s += '/r' + r.reps.map(x => REPS[x].code).join('');
+    if (r.misc.length) s += '/m' + r.misc.map(x => MISC[x].code).join('');
+    if (r.stuck) s += '/s' + r.stuck.replace(/<rt>.*?<\/rt>/g, '').replace(/<[^>]+>/g, '').replace(/[|;:/\s]/g, '');
+    if (r.pre.length) s += '/p' + r.pre.map(x => x.ok ? 'o' : 'x').join('');
+    if (r.b) s += '/b' + r.b;
+    if (r.redeem) s += '/e';
+    return s + '/t' + r.sec;
+  });
+  return 'H5|' + S.ban + '|' + S.sid + '|' + parts.join(';') + '|' + S.titles.join(',') + '|END';
+}
+let sendTimer = null;
+function markDirty() { S.dirty = true; save(); }
+function scheduleSend() { if (!CONFIG.webhookUrl || !CONFIG.autoSendEvery) return; clearTimeout(sendTimer); sendTimer = setTimeout(() => sendNow(false), 1500); }
+function sendNow(beacon) {
+  if (!CONFIG.webhookUrl) return;
+  const body = JSON.stringify(recordJSON());
+  try {
+    if (beacon && navigator.sendBeacon) { navigator.sendBeacon(CONFIG.webhookUrl, body); S.sendState = 'sent'; S.dirty = false; save(); updHead(); return; }
+    S.sendState = 'sending'; updHead();
+    fetch(CONFIG.webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body })
+      .then(() => { S.sendState = 'sent'; S.dirty = false; S.lastSent = Date.now(); save(); updHead(); if (S.done && $('#sendline')) $('#sendline').innerHTML = sendLine(); })
+      .catch(() => { S.sendState = 'fail'; save(); updHead(); if (S.done && $('#sendline')) $('#sendline').innerHTML = sendLine(); });
+  } catch (e) { S.sendState = 'fail'; updHead(); }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.dirty && CONFIG.webhookUrl) sendNow(true); });
+window.addEventListener('pagehide', () => { if (S && S.dirty && CONFIG.webhookUrl) sendNow(true); });
+function formsLink() {
+  if (!CONFIG.formsUrl) return '';
+  const s = summary(); const map = { __BAN__: S.ban, __TANGEN__: S.unit, __MON__: s.mon, __SEIKAI__: s.seikai, __HINT__: s.hint, __HYOGEN__: s.hyogen, __TSUMAZUKI__: s.tsumazuki, __CODE__: recordCode() };
+  let u = CONFIG.formsUrl; Object.keys(map).forEach(k => { u = u.split(k).join(encodeURIComponent(String(map[k]))); }); return u;
+}
+function sendLine() {
+  if (!CONFIG.webhookUrl) return '';
+  return S.sendState === 'sent' ? '<div class="msg ok">記録は先生に送ったよ ✓</div>' : S.sendState === 'sending' ? '<div class="msg info">送っています…</div>' : '<div class="msg">まだ送れていないよ。下の「もう一度送る」か、記録コードを使ってね。<br><button class="sm" id="resend">もう一度送る</button></div>';
+}
+function renderEnd() {
+  updHead(); $('#endbtn').style.display = 'none';
+  const vals = Object.values(S.items); const ok = vals.filter(r => r.ok).length, first = vals.filter(r => r.first).length;
+  let h = '<h1>おつかれさま！</h1>' + chr('bye', isTest() ? S.ban + '番さん、テストおつかれさま。' + vals.length + ' 問中 ' + ok + ' 問できたよ。' :
+    S.ban + '番さん、今日は ' + vals.length + ' 問やって、' + ok + ' 問できたね。' + (first ? '（1回めで正解 ' + first + ' 問）' : ''));
+  h += '<div id="sendline">' + sendLine() + '</div>';
+  if (CONFIG.formsUrl) h += '<div class="msg info">先生に送るボタンをおして、ひらいた画面の「送信」をおしてね。<br><a href="' + esc(formsLink()) + '" target="_blank" rel="noopener"><button class="pri sm">先生に送る（Forms）</button></a></div>';
+  h += '<h2>' + (isTest() ? 'テストのけっか' : 'できた地図') + '</h2><div class="map">' + allKeys().map(([e, t]) => { const r = S.items[key(e, t)]; const P = PBY[qid(e)];
+    const c = !r ? 'none' : isTest() ? (r.ok ? 'full' : 'ng') : r.ok ? (r.first || r.redeem ? 'full' : 'half') : 'none';
+    return '<div class="' + c + '">' + pnum(P).replace(' のるい題', '<br>るい題').replace(' のれんしゅう', '<br>れんしゅう') + (P.parts.length > 1 ? '<br>(' + (t + 1) + ')' : '') + (isTest() && r ? '<br>' + (r.ok ? '○' : '×') : '') + '</div>'; }).join('') + '</div>';
+  if (S.titles.length) h += '<h2>しょうごう</h2>' + S.titles.map(t => '<span class="title">' + TITLES[t] + '</span>').join('');
+  h += '<h2>記録コード</h2><div class="note">送れなかったときは、これをコピーして Teams にはってね。</div><div class="code" id="code">' + recordCode() + '</div><div class="cards"><button class="sm" id="copy">コピー</button></div>';
+  render(h, '<button id="again">さいしょにもどる</button>');
+  on('#copy', () => { const t = recordCode(); const done = () => toast('コピーしたよ'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(() => selectCode()); else selectCode(); });
+  on('#resend', () => sendNow(false));
+  on('#again', () => { renderStart(); });
+}
+function selectCode() { const el = $('#code'); const r = document.createRange(); r.selectNodeContents(el); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); try { document.execCommand('copy'); toast('コピーしたよ'); } catch (e) { toast('長おしして コピー してね'); } }
+</script>
+<script>
+// =====================================================================
+// 教科書と同じような絵（問題文の下に出す）。すべて SVG の文字列で描く
+// =====================================================================
+const sv = (w, h, body, maxw) => '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;max-width:' + (maxw || w) + 'px;height:auto;display:block">' + body + '</svg>';
+const tx = (x, y, t, o) => '<text x="' + x + '" y="' + y + '" text-anchor="' + ((o && o.a) || 'middle') + '" font-size="' + ((o && o.s) || 18) + '"' + (o && o.b ? ' font-weight="bold"' : '') + ' fill="' + ((o && o.c) || '#222') + '">' + t + '</text>';
+// 計量カップ（ジュース入り）：教科書 p.131 と同じ「番号・カップ・量」のならび
+function beaker(x, v, cap, label, num) {
+  const w = 84, h = 120, top = 30, bot = top + h, lv = bot - Math.min(v / cap, 1) * (h - 8);
+  let g = tx(x + w / 2, 20, num, { s: 20 });
+  g += '<path d="M' + x + ' ' + top + ' V' + (bot - 8) + ' Q' + x + ' ' + bot + ' ' + (x + 8) + ' ' + bot + ' H' + (x + w - 8) + ' Q' + (x + w) + ' ' + bot + ' ' + (x + w) + ' ' + (bot - 8) + ' V' + top + '" fill="#f4f8fb" stroke="#7a8a96" stroke-width="2.5"/>';
+  g += '<path d="M' + (x + 3) + ' ' + lv + ' V' + (bot - 8) + ' Q' + (x + 3) + ' ' + (bot - 3) + ' ' + (x + 10) + ' ' + (bot - 3) + ' H' + (x + w - 10) + ' Q' + (x + w - 3) + ' ' + (bot - 3) + ' ' + (x + w - 3) + ' ' + (bot - 8) + ' V' + lv + ' Z" fill="#f2b33d"/>';
+  g += '<ellipse cx="' + (x + w / 2) + '" cy="' + lv + '" rx="' + (w / 2 - 3) + '" ry="5" fill="#f7cd6b"/>';
+  for (let k = 1; k <= 5; k++) { const yy = bot - k * (h - 8) / 6; g += '<line x1="' + (x + w - 16) + '" y1="' + yy + '" x2="' + (x + w - 4) + '" y2="' + yy + '" stroke="#7a8a96" stroke-width="1.5"/>'; }
+  g += '<ellipse cx="' + (x + w / 2) + '" cy="' + top + '" rx="' + (w / 2) + '" ry="6" fill="none" stroke="#7a8a96" stroke-width="2.5"/>';
+  return g + tx(x + w / 2, bot + 30, label, { s: 22, b: 1 });
+}
+function cupsRow(vals, nums, unit) {
+  const cap = Math.max(...vals) * 1.15, gap = 110, W = vals.length * gap + 20;
+  return sv(W, 190, vals.map((v, i) => beaker(20 + i * gap, v, cap, fmt(v) + unit, nums[i])).join(''), Math.min(W, 640));
+}
+function orange(cx, cy, r) { return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#f39a1e" stroke="#c46d05" stroke-width="1.5"/><circle cx="' + (cx - r / 3) + '" cy="' + (cy - r / 3) + '" r="' + (r / 4) + '" fill="#f7c06a"/><path d="M' + cx + ' ' + (cy - r) + ' l3 -5" stroke="#4d7a2a" stroke-width="2"/>'; }
+function potatoShape(cx, cy, rx, ry, rot) { return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" transform="rotate(' + (rot || 0) + ' ' + cx + ' ' + cy + ')" fill="#d9a65f" stroke="#9a6b2c" stroke-width="2"/><circle cx="' + (cx - rx / 3) + '" cy="' + (cy - 2) + '" r="1.8" fill="#9a6b2c"/><circle cx="' + (cx + rx / 4) + '" cy="' + (cy + ry / 3) + '" r="1.8" fill="#9a6b2c"/>'; }
+function basketShape(x, y, w, h) {
+  let g = '<path d="M' + x + ' ' + y + ' L' + (x + 16) + ' ' + (y + h) + ' H' + (x + w - 16) + ' L' + (x + w) + ' ' + y + ' Z" fill="#c98b45" stroke="#8a5a22" stroke-width="2.5"/>';
+  for (let k = 1; k < 4; k++) { const yy = y + k * h / 4; g += '<line x1="' + (x + 4 * k) + '" y1="' + yy + '" x2="' + (x + w - 4 * k) + '" y2="' + yy + '" stroke="#8a5a22" stroke-width="1.5"/>'; }
+  for (let k = 1; k < 8; k++) { const xx = x + k * w / 8; g += '<line x1="' + xx + '" y1="' + y + '" x2="' + (xx + (xx < x + w / 2 ? 4 : -4)) + '" y2="' + (y + h) + '" stroke="#8a5a22" stroke-width="1.2"/>'; }
+  return g + '<rect x="' + (x - 4) + '" y="' + (y - 6) + '" width="' + (w + 8) + '" height="10" rx="5" fill="#b07433" stroke="#8a5a22" stroke-width="2"/>';
+}
+
+const PICS = {
+  // p.131：5このオレンジからとれたジュース
+  juice: P => cupsRow(P.d, circ(P.d.length), 'mL'),
+  // p.134：もう1個しぼった ⑥ のカップ
+  cup6: P => { const x = P.d[P.d.length - 1], n = P.d.length; return sv(170, 190, beaker(40, x, Math.max(x, P.d[0]) * 1.15, fmt(x) + 'mL', '①②③④⑤⑥⑦⑧'[n - 1]), 170); },
+  // p.133：かごいっぱいのオレンジ
+  basket: P => { const n = P.parts[0].tape.n; let g = ''; const pos = [[70, 52], [100, 46], [130, 50], [160, 54], [85, 30], [115, 26], [145, 30], [100, 10], [130, 8]];
+    pos.forEach(p => g += orange(p[0], p[1] + 20, 16)); g += basketShape(40, 70, 150, 60);
+    return sv(480, 140, g + tx(215, 90, 'オレンジ 全部で ' + n + ' 個', { s: 22, b: 1, a: 'start' }), 480); },
+  // p.133：たまご4この重さ
+  eggs: P => { let g = ''; P.d.forEach((v, i) => { const cx = 60 + i * 110; g += '<ellipse cx="' + cx + '" cy="58" rx="36" ry="46" fill="#f6dcc6" stroke="#c9a487" stroke-width="2"/><ellipse cx="' + (cx - 12) + '" cy="40" rx="8" ry="12" fill="#fbeee3"/>' + tx(cx, 132, fmt(v) + 'g', { s: 22, b: 1 }); });
+    return sv(P.d.length * 110 + 10, 145, g, 480); },
+  // p.135：地図の上で、学校から駅までの長さをものさしではかる
+  map: () => { let g = '<rect x="0" y="0" width="560" height="170" fill="#eef4e6" rx="10"/>';
+    g += '<path d="M20 120 Q140 90 280 110 T540 70" stroke="#fff" stroke-width="14" fill="none"/><path d="M20 120 Q140 90 280 110 T540 70" stroke="#c9c9c9" stroke-width="2" fill="none" stroke-dasharray="6 6"/>';
+    g += '<path d="M200 10 V160" stroke="#fff" stroke-width="10"/><path d="M420 10 V160" stroke="#fff" stroke-width="10"/>';
+    g += '<rect x="60" y="40" width="54" height="40" fill="#f2f2f2" stroke="#666" stroke-width="2"/><path d="M56 40 L87 22 L118 40" fill="#e06b4b" stroke="#666" stroke-width="2"/><rect x="82" y="58" width="10" height="22" fill="#9bc3e6"/>' + tx(87, 100, '学校', { s: 18, b: 1 });
+    g += '<rect x="440" y="38" width="80" height="34" fill="#ffe7a8" stroke="#666" stroke-width="2"/>' + tx(480, 61, '駅', { s: 18, b: 1 });
+    g += '<g transform="rotate(-1.17 87 80)"><rect x="77" y="80" width="420" height="28" fill="#f6e2a4" stroke="#a58a3a" stroke-width="2" opacity=".95"/>';
+    for (let k = 0; k <= 40; k++) g += '<line x1="' + (87 + k * 10) + '" y1="80" x2="' + (87 + k * 10) + '" y2="' + (80 + (k % 5 ? 7 : 13)) + '" stroke="#6d5a1f" stroke-width="1"/>';
+    g += '</g><circle cx="87" cy="80" r="5" fill="#e06b4b"/><circle cx="480" cy="72" r="5" fill="#e06b4b"/><line x1="87" y1="80" x2="480" y2="72" stroke="#e06b4b" stroke-width="2" stroke-dasharray="5 4"/>';
+    return sv(560, 170, g, 560); },
+  // p.136：サッカー
+  soccer: () => { let g = '<circle cx="40" cy="40" r="34" fill="#fff" stroke="#222" stroke-width="2.5"/><path d="M40 26 L52 35 L48 49 L32 49 L28 35 Z" fill="#222"/>';
+    [[40, 26, 40, 8], [52, 35, 70, 30], [48, 49, 58, 66], [32, 49, 22, 66], [28, 35, 10, 30]].forEach(l => g += '<line x1="' + l[0] + '" y1="' + l[1] + '" x2="' + l[2] + '" y2="' + l[3] + '" stroke="#222" stroke-width="2"/>');
+    return sv(80, 80, g, 70); },
+  // p.137：子どもの数のぼうグラフと「仮に基準を300にする」
+  basebar: P => { const d = P.d, b = P.kbase, top = Math.ceil(Math.max(...d) / 100) * 100, H = 200, y = v => 20 + H - v / top * H; let g = '';
+    for (let v = 0; v <= top; v += 100) g += '<line x1="60" y1="' + y(v) + '" x2="430" y2="' + y(v) + '" stroke="#ddd"/>' + tx(52, y(v) + 6, String(v), { a: 'end', s: 15 });
+    d.forEach((v, i) => { const x = 85 + i * 85; g += '<rect x="' + x + '" y="' + y(v) + '" width="44" height="' + (y(0) - y(v)) + '" fill="#8cc63f"/>' + tx(x + 22, y(0) + 20, P.labels[i], { s: 14 }); });
+    g += '<line x1="60" y1="' + y(b) + '" x2="430" y2="' + y(b) + '" stroke="#e8891d" stroke-width="3" stroke-dasharray="7 5"/>';
+    g += '<path d="M450 ' + (y(b) - 40) + ' V' + (y(b) - 6) + '" stroke="#e8891d" stroke-width="3"/><path d="M444 ' + (y(b) - 14) + ' L450 ' + (y(b) - 4) + ' L456 ' + (y(b) - 14) + '" fill="none" stroke="#e8891d" stroke-width="3"/>';
+    g += tx(500, y(b) - 50, '仮に基準を', { s: 15, c: '#b5650a' }) + tx(500, y(b) - 32, b + 'にする', { s: 15, c: '#b5650a' }) + tx(60, 14, '(人)', { s: 14 });
+    return sv(560, 250, g, 520); },
+  // p.138：10歩歩いた長さ
+  steps: P => { const n = P.parts[0].tape.n, L = P.parts[0].tape.total, W = 600; let g = '';
+    for (let k = 0; k <= n; k++) { const x = 30 + k * (W - 60) / n, yy = k % 2 ? 46 : 70; g += '<ellipse cx="' + x + '" cy="' + yy + '" rx="14" ry="7" fill="#3a9ad9"/><ellipse cx="' + (x + 13) + '" cy="' + yy + '" rx="5" ry="5" fill="#3a9ad9"/>'; }
+    g += '<line x1="30" y1="100" x2="' + (W - 30) + '" y2="100" stroke="#333" stroke-width="2"/><path d="M30 100 l12 -6 v12 z M' + (W - 30) + ' 100 l-12 -6 v12 z" fill="#333"/>' + tx(W / 2, 92, fmt(L) + 'm（' + n + '歩）', { s: 20, b: 1 });
+    g += '<line x1="30" y1="30" x2="30" y2="108" stroke="#999" stroke-dasharray="3 3"/><line x1="' + (W - 30) + '" y1="30" x2="' + (W - 30) + '" y2="108" stroke="#999" stroke-dasharray="3 3"/>';
+    return sv(W, 115, g, 600); },
+  // p.140：れなさんのかご（1こずつの重さ）と、そうたさんのはかり（合計）
+  potato: P => { const d = P.d, t = P.parts[1].tape.total, n = P.parts[1].tape.n; let g = '';
+    const pos = [[70, 40, -10], [120, 34, 15], [170, 42, -5], [95, 70, 8], [150, 72, -12]];
+    g += basketShape(30, 90, 190, 50);
+    d.forEach((v, i) => { const p = pos[i % 5]; g += potatoShape(p[0], p[1] + 10, 26, 17, p[2]) + tx(p[0], p[1] + 16, fmt(v) + 'g', { s: 13, b: 1 }); });
+    g += tx(125, 168, 'れな', { s: 18, b: 1 });
+    g += '<rect x="300" y="100" width="210" height="46" rx="8" fill="#c8ccd2" stroke="#666" stroke-width="2"/><rect x="370" y="110" width="70" height="26" fill="#eaf6ea" stroke="#666"/>' + tx(405, 130, t + 'g', { s: 17, b: 1 });
+    g += '<rect x="290" y="88" width="230" height="12" rx="4" fill="#9aa0a8" stroke="#666" stroke-width="2"/>';
+    for (let k = 0; k < n; k++) g += potatoShape(320 + (k % 4) * 46 + (k >= 4 ? 23 : 0), k >= 4 ? 56 : 74, 22, 14, (k * 37) % 30 - 15);
+    g += tx(405, 168, 'そうた　合計 ' + t + 'g', { s: 18, b: 1 });
+    return sv(540, 178, g, 540); }
+};
+
+// 「図をえらぶ」の小さい図
+function FIGTHUMB(kind) {
+  const W = 220, H = 110; let g = '';
+  const bar = (x, h, c) => '<rect x="' + x + '" y="' + (90 - h) + '" width="26" height="' + h + '" fill="' + (c || '#bcd0f5') + '" stroke="#5a7bc0"/>';
+  const q = (x, y) => tx(x, y, '？', { s: 22, b: 1, c: '#e8891d' });
+  if (kind === 'level') { [40, 70, 30, 55].forEach((h, i) => g += bar(30 + i * 40, h)); g += '<line x1="20" y1="' + (90 - 49) + '" x2="185" y2="' + (90 - 49) + '" stroke="#e8891d" stroke-width="3" stroke-dasharray="6 4"/>' + q(203, 48); }
+  if (kind === 'repeat') { for (let i = 0; i < 5; i++) g += '<rect x="' + (14 + i * 38) + '" y="30" width="38" height="30" fill="#f7c948" stroke="#333"/>'; g += tx(33, 51, '1つ分', { s: 11 }) + '<path d="M14 68 v8 H204 v-8" fill="none" stroke="#3a6fd8" stroke-width="2"/>' + tx(109, 98, '全部 ？', { s: 18, b: 1, c: '#e8891d' }); }
+  if (kind === 'split') { g += '<path d="M14 26 v-8 H204 v8" fill="none" stroke="#3a6fd8" stroke-width="2"/>' + tx(109, 14, '全部', { s: 15, b: 1 }); for (let i = 0; i < 5; i++) g += '<rect x="' + (14 + i * 38) + '" y="32" width="38" height="30" fill="' + (i ? '#fff' : '#f7c948') + '" stroke="#333"/>'; g += q(33, 54) + tx(109, 90, '同じに分ける', { s: 14 }); }
+  if (kind === 'mid2') { g += bar(60, 40) + bar(140, 70) + '<line x1="50" y1="35" x2="180" y2="35" stroke="#e8891d" stroke-width="3" stroke-dasharray="6 4"/>' + q(110, 30) + tx(110, 106, '2つだけ', { s: 13 }); }
+  if (kind === 'addnew') { [44, 44, 44, 44].forEach((h, i) => g += bar(18 + i * 34, h)); g += bar(160, 70, '#f7c948') + '<line x1="10" y1="40" x2="196" y2="40" stroke="#e8891d" stroke-width="3" stroke-dasharray="6 4"/>' + q(206, 38) + tx(70, 106, 'もとの平均', { s: 12 }) + tx(173, 106, '新しい', { s: 12 }); }
+  return sv(W, H, g, 220);
+}
+</script>
+<script>
+// =====================================================================
+// 表現（考え方）の図。すべて SVG で描く
+// =====================================================================
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+function decimalsOf(a) { return Math.max(0, ...a.map(v => (String(v).split('.')[1] || '').length)); }
+// ブロック1個分の大きさ（全部わり切れて、いちばん高い列が25個以下になる単位）。なければ null
+// ブロック1個分の大きさ（全部わり切れて、いちばん高い列が30個以下になる、いちばん小さい単位）。なければ null
+function blockUnit(d) { for (const u of [1, 2, 5, 10, 20, 50, 100]) { if (d.every(v => near(v / u, Math.round(v / u))) && Math.max(...d) / u <= 30 && Math.max(...d) / u >= 1) return u; } return null; }
+function ptPos(svg, ev) { const r = svg.getBoundingClientRect(); const vb = svg.viewBox.baseVal; return { x: (ev.clientX - r.left) / r.width * vb.width, y: (ev.clientY - r.top) / r.height * vb.height }; }
+
+const WIDGETS = {};
+
+// ---- ブロック／コップ（ならす操作） ----
+// コップ：1回で移す量を 10・5・1 からえらべる。ほとんど同じになったら「のこりも同じに分ける」で、ぴったりの平均（80.6 など）を見せる
+// ブロック：1こ単位で動かす。あまりが出たら「ブロックを切って分ける」で、はしたの高さを見せる
+function levelWidget(host, ctx, skin) {
+  const n = ctx.d.length, init = ctx.d.slice(), total = fx(sum(init)), avg = total / n, U = ctx.unit;
+  const u = skin === 'block' ? blockUnit(init) : 1;
+  let vals = init.slice(), step = skin === 'block' ? u : 5, exact = false, moves = 0, drag = null, timer = null;
+  const W = 760, H = 380, colW = W / n, bw = Math.min(colW * 0.56, 80), baseY = 300, areaH = 240;
+  const cap = Math.max(...init) * 1.15;
+  host.innerHTML = '<div class="lvtot">全部で ' + fmt(total) + U + '（' + n + 'こ分）　動かしても、全部の量はかわらないよ。</div>' +
+    (skin === 'cup' ? '<div class="lvbar">1回で移す量：' + [10, 5, 1].map(s => '<button class="sm" data-s="' + s + '">' + s + U + '</button>').join('') + '</div>'
+                    : '<div class="lvbar">ブロック1こ＝' + u + U + '</div>') +
+    '<div class="note">' + (skin === 'cup' ? '多いコップを指でおさえて、少ないコップまで動かそう。' : 'ブロックの多い列を指でおさえて、少ない列まで動かそう。') + '</div>';
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'w' }); host.appendChild(svg);
+  const msg = document.createElement('div'); host.appendChild(msg);
+  const tools = document.createElement('div'); tools.className = 'lvbar'; host.appendChild(tools);
+  tools.innerHTML = '<button class="sm" id="lvreset">もとにもどす</button><button class="sm" id="lvauto">ならしてみせて</button>';
+  const yOf = v => baseY - v / cap * areaH;
+  const spread = () => Math.max(...vals) - Math.min(...vals);
+  const allEq = () => spread() < 1e-6;
+  const close = () => !allEq() && spread() <= step + 1e-9;
+  function draw() {
+    svg.innerHTML = '';
+    if (exact || allEq()) svg.appendChild(svgEl('line', { x1: 0, y1: yOf(avg), x2: W, y2: yOf(avg), stroke: '#2e9e5b', 'stroke-width': 3, 'stroke-dasharray': '8 5' }));
+    vals.forEach((v, i) => {
+      const cx = colW * i + colW / 2, src = drag && drag.from === i;
+      if (skin === 'cup') {
+        const ch = Math.max(...init) / cap * areaH + 16;
+        svg.appendChild(svgEl('rect', { x: cx - bw / 2, y: baseY - ch, width: bw, height: ch, fill: '#fff', stroke: src ? '#e8891d' : '#888', 'stroke-width': src ? 4 : 2, rx: 5 }));
+        svg.appendChild(svgEl('rect', { x: cx - bw / 2 + 3, y: yOf(v), width: bw - 6, height: baseY - yOf(v), fill: '#f7c948' }));
+      } else {
+        const c = v / u, full = Math.floor(c + 1e-9), fr = c - full, bh = areaH * u / cap;
+        for (let k = 0; k < full; k++) svg.appendChild(svgEl('rect', { x: cx - bw / 2, y: baseY - (k + 1) * bh + 1, width: bw, height: bh - 2, fill: src && k === full - 1 ? '#e8891d' : '#f7c948', stroke: '#b57a12', 'stroke-width': 1 }));
+        if (fr > 1e-6) svg.appendChild(svgEl('rect', { x: cx - bw / 2, y: baseY - (full + fr) * bh + 1, width: bw, height: fr * bh - 1, fill: '#fde9a8', stroke: '#b57a12', 'stroke-width': 1, 'stroke-dasharray': '3 2' }));
+      }
+      svg.appendChild(svgEl('text', { x: cx, y: baseY + 26, 'text-anchor': 'middle', 'font-size': 18 }, ctx.labels[i]));
+      svg.appendChild(svgEl('text', { x: cx, y: baseY + 54, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 'bold', fill: exact || allEq() ? '#2e9e5b' : '#222' }, fmt(rnd(v, 2)) + U));
+    });
+    svg.appendChild(svgEl('line', { x1: 0, y1: baseY, x2: W, y2: baseY, stroke: '#333', 'stroke-width': 2 }));
+    if (drag && drag.moved) {
+      svg.appendChild(svgEl('rect', { x: drag.x - 34, y: drag.y - 20, width: 68, height: 40, rx: 8, fill: skin === 'cup' ? '#f7c948' : '#e8891d', stroke: '#b57a12', 'stroke-width': 2, opacity: .95 }));
+      svg.appendChild(svgEl('text', { x: drag.x, y: drag.y + 7, 'text-anchor': 'middle', 'font-size': 18, 'font-weight': 'bold' }, fmt(Math.min(step, vals[drag.from])) + U));
+    }
+    // ことば
+    const nonInt = !near(avg, Math.round(avg));
+    if (exact) {
+      msg.innerHTML = '<div class="msg ok">ぴったり同じになったね！ 1つ分は <b>' + fmt(rnd(avg, 3)) + (near(avg, rnd(avg, 3)) ? '' : '…') + U + '</b>。これが平均だよ。' +
+        (nonInt ? '<br>' + Math.floor(avg) + U + 'でも' + Math.ceil(avg) + U + 'でもなく、その間の ' + fmt(rnd(avg, 3)) + U + ' だよ。' + (skin === 'block' ? '（ブロックを小さく切って分けたと考えるよ）' : '') : '') +
+        '<br>計算でたしかめると　' + fmt(total) + '÷' + n + '＝' + fmt(rnd(avg, 3)) + '</div>';
+    } else if (allEq()) {
+      msg.innerHTML = '<div class="msg ok">ならせた！ 全部 <b>' + fmt(rnd(avg, 3)) + U + '</b>。これが平均だよ。<br>計算でたしかめると　' + fmt(total) + '÷' + n + '＝' + fmt(rnd(avg, 3)) + '</div>';
+    } else if (close()) {
+      msg.innerHTML = '<div class="msg info">' + (skin === 'cup' ? 'もうほとんど同じ！ これ以上 ' + step + U + 'ずつでは同じにならないね。' : 'ブロックが少しあまって、ぴったりにならないね。') +
+        '<br><button class="sm ok" id="lvexact">' + (skin === 'cup' ? 'のこりも同じに分ける' : 'あまりを切って分ける') + '</button></div>';
+      msg.querySelector('#lvexact').addEventListener('click', () => { exact = true; vals = vals.map(() => avg); draw(); });
+    } else msg.innerHTML = '<div class="note">動かした回数：' + moves + ' 回</div>';
+    tools.querySelector('#lvauto').disabled = exact || allEq();
+  }
+  const colAt = x => Math.max(0, Math.min(n - 1, Math.floor(x / colW)));
+  svg.addEventListener('pointerdown', ev => {
+    if (exact || timer) return; const p = ptPos(svg, ev); const i = colAt(p.x); if (vals[i] <= 1e-9) return;
+    drag = { from: i, x: p.x, y: p.y, moved: false }; svg.setPointerCapture(ev.pointerId); draw(); ev.preventDefault();
+  });
+  svg.addEventListener('pointermove', ev => { if (!drag) return; const p = ptPos(svg, ev); drag.x = p.x; drag.y = p.y; drag.moved = true; draw(); });
+  svg.addEventListener('pointerup', ev => {
+    if (!drag) return; const p = ptPos(svg, ev); const j = colAt(p.x);
+    if (j !== drag.from) { const a = Math.min(step, vals[drag.from]); vals[drag.from] = fx(vals[drag.from] - a); vals[j] = fx(vals[j] + a); moves++; }
+    drag = null; draw();
+  });
+  svg.addEventListener('pointercancel', () => { drag = null; draw(); });
+  host.querySelectorAll('[data-s]').forEach(b => {
+    b.classList.toggle('on', +b.dataset.s === step);
+    b.addEventListener('click', () => { step = +b.dataset.s; host.querySelectorAll('[data-s]').forEach(x => x.classList.toggle('on', +x.dataset.s === step)); draw(); });
+  });
+  tools.querySelector('#lvreset').addEventListener('click', () => { clearInterval(timer); timer = null; vals = init.slice(); exact = false; moves = 0; draw(); });
+  tools.querySelector('#lvauto').addEventListener('click', () => {
+    if (timer) return;
+    timer = setInterval(() => {
+      if (!document.body.contains(svg)) { clearInterval(timer); timer = null; return; }
+      if (allEq() || close()) { clearInterval(timer); timer = null; if (!allEq()) { exact = true; vals = vals.map(() => avg); } draw(); return; }
+      let i = 0, j = 0; vals.forEach((v, k) => { if (v > vals[i]) i = k; if (v < vals[j]) j = k; });
+      vals[i] = fx(vals[i] - step); vals[j] = fx(vals[j] + step); moves++; draw();
+    }, 400);
+  });
+  draw();
+}
+WIDGETS['r-block'] = (h, c) => levelWidget(h, c, 'block');
+WIDGETS['r-cup'] = (h, c) => levelWidget(h, c, 'cup');
+
+// ---- ぼうグラフと横線 ----
+WIDGETS['r-bar'] = function (host, ctx) {
+  const d = ctx.d, n = d.length, mx = Math.max(...d) * 1.15, W = 760, H = 380, left = 70, top = 20, gh = 290, colW = (W - left - 20) / n;
+  const k = decimalsOf(d) + 1, avg = sum(d) / n;
+  host.innerHTML = '<div class="note">横線を上下に動かして、「線より上の分」と「線より下の分」が同じになる所をさがそう。</div><div id="brmsg"></div>';
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'w' }); host.appendChild(svg);
+  const y = v => top + gh - v / mx * gh, val = yy => (top + gh - yy) / gh * mx;
+  let L = rnd((Math.min(...d) + Math.max(...d)) / 2, k) + 0.0; let found = false;
+  function draw() {
+    svg.innerHTML = '';
+    svg.appendChild(svgEl('line', { x1: left, y1: top, x2: left, y2: top + gh, stroke: '#333', 'stroke-width': 2 }));
+    svg.appendChild(svgEl('line', { x1: left, y1: top + gh, x2: W - 10, y2: top + gh, stroke: '#333', 'stroke-width': 2 }));
+    d.forEach((v, i) => {
+      const x = left + colW * i + colW * 0.2, w = colW * 0.6;
+      svg.appendChild(svgEl('rect', { x, y: y(v), width: w, height: top + gh - y(v), fill: '#bcd0f5' }));
+      if (v > L) svg.appendChild(svgEl('rect', { x, y: y(v), width: w, height: y(L) - y(v), fill: '#e8891d', opacity: .8 }));
+      if (v < L) svg.appendChild(svgEl('rect', { x, y: y(v), width: w, height: y(v) - y(L), fill: 'none', stroke: '#e8891d', 'stroke-width': 2, 'stroke-dasharray': '4 3', transform: 'translate(0,' + (-(y(v) - y(L))) + ')' }));
+      svg.appendChild(svgEl('text', { x: x + w / 2, y: top + gh + 22, 'text-anchor': 'middle', 'font-size': 17 }, ctx.labels[i]));
+      svg.appendChild(svgEl('text', { x: x + w / 2, y: y(v) - 6, 'text-anchor': 'middle', 'font-size': 17 }, fmt(v)));
+    });
+    svg.appendChild(svgEl('line', { x1: left - 10, y1: y(L), x2: W - 10, y2: y(L), stroke: found ? '#2e9e5b' : '#e8891d', 'stroke-width': 4 }));
+    svg.appendChild(svgEl('text', { x: left - 12, y: y(L) + 7, 'text-anchor': 'end', 'font-size': 20, fill: found ? '#2e9e5b' : '#e8891d', 'font-weight': 'bold' }, fmt(L)));
+    const above = fx(sum(d.map(v => Math.max(v - L, 0)))), below = fx(sum(d.map(v => Math.max(L - v, 0))));
+    host.querySelector('#brmsg').innerHTML = found ? '<div class="msg ok">上と下がぴったり同じ！ この線の高さ ' + fmt(L) + ctx.unit + ' が平均だよ。</div>' :
+      '<div class="row">線より上の分：<b>' + fmt(above) + '</b>　線より下の分：<b>' + fmt(below) + '</b>　' + (above > below ? '→ 線をもう少し上へ' : '→ 線をもう少し下へ') + '</div>';
+  }
+  const move = ev => { const p = ptPos(svg, ev); let v = rnd(Math.max(0, Math.min(mx, val(p.y))), k); if (Math.abs(v - avg) < mx * 0.02) { v = fx(avg); found = true; } else found = false; L = v; draw(); };
+  svg.addEventListener('pointerdown', ev => { svg.setPointerCapture(ev.pointerId); move(ev); ev.preventDefault(); });
+  svg.addEventListener('pointermove', ev => { if (ev.buttons || ev.pressure) move(ev); });
+  draw();
+};
+
+// ---- 仮平均（基準より上を見る） ----
+WIDGETS['r-base'] = function (host, ctx) {
+  const d = ctx.d, n = d.length, W = 760, H = 380, left = 80, top = 20, gh = 290, colW = (W - left - 20) / n;
+  const mn = Math.min(...d), mx = Math.max(...d);
+  const cands = [...new Set([ctx.base - 100, ctx.base - 50, ctx.base, Math.floor(mn / 10) * 10])].filter(b => b > 0 && b <= mn).sort((a, b) => a - b);
+  let base = null, leveled = false;
+  host.innerHTML = '<div class="note">基準にする数をえらぶと、基準より上の部分だけが見えるよ。</div><div class="cards" id="bc">' + cands.map(b => '<button data-b="' + b + '">基準 ' + b + '</button>').join('') + '</div><div id="bmsg"></div>';
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'w' }); host.appendChild(svg);
+  function draw() {
+    svg.innerHTML = '';
+    const lo = base == null ? 0 : base, hi = base == null ? mx * 1.1 : lo + (mx - lo) * 1.3;
+    const y = v => top + gh - (v - lo) / (hi - lo) * gh;
+    svg.appendChild(svgEl('line', { x1: left, y1: top, x2: left, y2: top + gh, stroke: '#333', 'stroke-width': 2 }));
+    svg.appendChild(svgEl('line', { x1: left, y1: top + gh, x2: W - 10, y2: top + gh, stroke: '#333', 'stroke-width': 2 }));
+    svg.appendChild(svgEl('text', { x: left - 8, y: top + gh + 6, 'text-anchor': 'end', 'font-size': 18 }, String(lo)));
+    if (base != null) svg.appendChild(svgEl('text', { x: left - 8, y: top + gh + 30, 'text-anchor': 'end', 'font-size': 16, fill: '#e8891d' }, '基準'));
+    const diffs = d.map(v => v - (base == null ? 0 : base)); const da = sum(diffs) / n;
+    d.forEach((v, i) => {
+      const x = left + colW * i + colW * 0.2, w = colW * 0.6;
+      svg.appendChild(svgEl('rect', { x, y: y(v), width: w, height: top + gh - y(v), fill: base == null ? '#bcd0f5' : '#8fd19e' }));
+      svg.appendChild(svgEl('text', { x: x + w / 2, y: top + gh + 22, 'text-anchor': 'middle', 'font-size': 17 }, ctx.labels[i]));
+      svg.appendChild(svgEl('text', { x: x + w / 2, y: y(v) - 6, 'text-anchor': 'middle', 'font-size': 18, 'font-weight': 'bold' }, base == null ? fmt(v) : '+' + fmt(diffs[i])));
+    });
+    if (leveled) { svg.appendChild(svgEl('line', { x1: left - 10, y1: y(lo + da), x2: W - 10, y2: y(lo + da), stroke: '#2e9e5b', 'stroke-width': 4 })); svg.appendChild(svgEl('text', { x: W - 12, y: y(lo + da) - 8, 'text-anchor': 'end', 'font-size': 20, fill: '#2e9e5b', 'font-weight': 'bold' }, '上の部分をならすと +' + fmt(da))); }
+    host.querySelector('#bmsg').innerHTML = base == null ? '' : leveled ? '<div class="msg ok">上の部分の平均は ' + fmt(da) + '。平均＝基準 ' + base + '＋' + fmt(da) + ' だね。</div>' :
+      '<div class="msg info">上の部分：' + diffs.map(fmt).join('、') + '　<button class="sm" id="lv">上の部分をならす</button></div>';
+    const lv = host.querySelector('#lv'); if (lv) lv.addEventListener('click', () => { leveled = true; draw(); });
+  }
+  host.querySelectorAll('#bc button').forEach(b => b.addEventListener('click', () => { base = +b.dataset.b; leveled = false; host.querySelectorAll('#bc button').forEach(x => x.classList.toggle('pri', x === b)); draw(); }));
+  draw();
+};
+
+// ---- 数直線で予想 ----
+WIDGETS['r-line'] = function (host, ctx) {
+  const d = ctx.d, W = 760, H = 200, left = 40, right = W - 40, ly = 110;
+  const lo = Math.floor(Math.min(...d)), hi = Math.ceil(Math.max(...d)) + (Math.ceil(Math.max(...d)) === Math.max(...d) ? 1 : 0);
+  const k = decimalsOf(d) + 1, avg = sum(d) / d.length;
+  let guess = null, revealed = false;
+  host.innerHTML = '<div class="note">数直線をタップして、平均がありそうな所に印をつけよう。</div><div id="lmsg"></div>';
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'w' }); host.appendChild(svg);
+  const x = v => left + (v - lo) / (hi - lo) * (right - left);
+  function draw() {
+    svg.innerHTML = '';
+    svg.appendChild(svgEl('line', { x1: left, y1: ly, x2: right, y2: ly, stroke: '#333', 'stroke-width': 3 }));
+    const step = (hi - lo) <= 10 ? 1 : Math.ceil((hi - lo) / 10);
+    for (let v = lo; v <= hi; v += step) { svg.appendChild(svgEl('line', { x1: x(v), y1: ly - 10, x2: x(v), y2: ly + 10, stroke: '#333', 'stroke-width': 2 })); svg.appendChild(svgEl('text', { x: x(v), y: ly + 34, 'text-anchor': 'middle', 'font-size': 18 }, String(v))); }
+    d.forEach((v, i) => { svg.appendChild(svgEl('circle', { cx: x(v), cy: ly - 30, r: 9, fill: '#bcd0f5', stroke: '#3a6fd8', 'stroke-width': 2 })); svg.appendChild(svgEl('text', { x: x(v), y: ly - 46, 'text-anchor': 'middle', 'font-size': 15 }, fmt(v))); });
+    if (revealed) { svg.appendChild(svgEl('line', { x1: x(avg), y1: ly - 60, x2: x(avg), y2: ly + 10, stroke: '#2e9e5b', 'stroke-width': 4 })); svg.appendChild(svgEl('text', { x: x(avg), y: ly - 66, 'text-anchor': 'middle', 'font-size': 18, fill: '#2e9e5b', 'font-weight': 'bold' }, '平均 ' + fmt(rnd(avg, k)))); }
+    if (guess != null) { svg.appendChild(svgEl('path', { d: 'M' + x(guess) + ' ' + (ly + 2) + ' l-12 24 h24 z', fill: '#e8891d' })); svg.appendChild(svgEl('text', { x: x(guess), y: ly + 60, 'text-anchor': 'middle', 'font-size': 18, fill: '#e8891d' }, '予想 ' + fmt(guess))); }
+    host.querySelector('#lmsg').innerHTML = guess == null ? '' : revealed ? '<div class="msg ' + (Math.abs(guess - avg) < (hi - lo) * 0.03 ? 'ok' : 'info') + '">' + (Math.abs(guess - avg) < (hi - lo) * 0.03 ? 'とても近い！' : guess < avg ? 'ほんとうの平均は、予想より少し大きいよ。' : 'ほんとうの平均は、予想より少し小さいよ。') + ' 平均はいちばん大きい数といちばん小さい数の間にあるよ。</div>' :
+      '<div class="cards"><button class="sm" id="lok">ここだと思う</button></div>';
+    const b = host.querySelector('#lok'); if (b) b.addEventListener('click', () => { revealed = true; draw(); });
+  }
+  svg.addEventListener('pointerdown', ev => { if (revealed) return; const p = ptPos(svg, ev); guess = rnd(Math.max(lo, Math.min(hi, lo + (p.x - left) / (right - left) * (hi - lo))), k); draw(); ev.preventDefault(); });
+  draw();
+};
+
+// ---- テープ図 ----
+WIDGETS['r-tape'] = function (host, ctx) {
+  const t = ctx.tape, n = t.n, shown = Math.min(n, 8), W = 760, H = 170, left = 20, right = W - 20, y = 40, h = 60;
+  host.innerHTML = '<div class="note">' + (t.dir === 'total' ? '平均が ' + n + ' 個分ならんでいると考えよう。全部の長さが合計。' : '合計を ' + n + ' 個に等しく分けたうちの1個分が平均。') + '</div>';
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'w' }); host.appendChild(svg);
+  const segW = (right - left) / shown;
+  for (let i = 0; i < shown; i++) {
+    const dots = n > shown && i === shown - 2;
+    svg.appendChild(svgEl('rect', { x: left + segW * i, y, width: segW, height: h, fill: dots ? '#fff' : '#f7c948', stroke: '#333', 'stroke-width': 2 }));
+    svg.appendChild(svgEl('text', { x: left + segW * i + segW / 2, y: y + h / 2 + 7, 'text-anchor': 'middle', 'font-size': 20 }, dots ? '…' : (t.dir === 'total' ? fmt(t.avg) : '？')));
+  }
+  svg.appendChild(svgEl('path', { d: 'M' + left + ' ' + (y + h + 10) + ' v12 H' + right + ' v-12', fill: 'none', stroke: '#3a6fd8', 'stroke-width': 3 }));
+  svg.appendChild(svgEl('text', { x: W / 2, y: y + h + 48, 'text-anchor': 'middle', 'font-size': 22, fill: '#3a6fd8', 'font-weight': 'bold' }, t.dir === 'total' ? '合計 ＝ ？（' + fmt(t.avg) + '×' + n + '）' : '合計 ' + fmt(t.total) + ctx.unit + '（？×' + n + '）'));
+  svg.appendChild(svgEl('text', { x: W / 2, y: y - 14, 'text-anchor': 'middle', 'font-size': 20 }, n + ' 個分'));
+};
+
+// =====================================================================
+// 起動
+// =====================================================================
+window.addEventListener('error', e => { const el = document.createElement('div'); el.className = 'msg'; el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999'; el.textContent = 'エラー：' + e.message; document.body.appendChild(el); });
+renderStart();
+</script>
+</body>
+</html>
